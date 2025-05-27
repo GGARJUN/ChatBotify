@@ -1,0 +1,161 @@
+.mainsection {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background-color: #f5f2f2;
+    color: #1b0b3b;
+    background-position: bottom;
+    background-repeat: no-repeat;
+    background-size: 100% 300px;
+}
+.mainsection h2, .mainsection p {
+    margin: 0;
+}
+.mainsection .innersection {
+    width: 40%;
+    text-align: center;
+}
+.mainsection .innersection .title {
+    gap: 8px;
+    margin: 20px 0 24px;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+/* .mainsection .innersection .title h2 {
+    font-feature-settings: "ss01";
+    font-size: 1.75rem;
+    line-height: 120%;
+    font-weight: 500;
+}
+.mainsection .innersection .title p {
+    font-family: Garnett, Helvetica, Segoe UI, Arial, sans-serif;
+    font-feature-settings: "ss01";
+    font-size: 1.125rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 160%;
+    color: #626266;
+} */
+.mainsection .innersection .content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 413px;
+    margin: auto;
+}
+.mainsection .innersection .content .seperator {
+    position: relative;
+}
+.mainsection .innersection .content .seperator p {
+    position: relative;
+    z-index: 99;
+    background-color: #f5f2f2;
+    width: fit-content;
+    margin: auto;
+    padding: 0 8px;
+    color: #626266;
+    font-size: 0.75rem;
+}
+.mainsection .innersection .content .seperator::before {
+    position: absolute;
+    left: 0;
+    top: 70%;
+    content: '';
+    width: 100%;
+    height: 1px;
+    background-color: #eae6e7;
+}
+.mainsection .innersection .content .name {
+    display: flex;
+    gap: 1rem;
+}
+.mainsection .innersection .content .email {
+    text-align: left;
+}
+.mainsection .innersection .content .email h2 {
+    font-weight: 500;
+    margin: 0 0 4px 24px;
+    font-feature-settings: "ss01";
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    line-height: 160%;
+}
+/* .mainsection .innersection .content .email input {
+    width: 100%;
+    transition-duration: 0.3s;
+    transition-property: background-color, color, border-color, box-shadow;
+    transition-timing-function: linear;
+    will-change: background-color, color, border-color, box-shadow;
+    border: 1px solid #eae6e7;
+    border-radius: 10px;
+    box-sizing: border-box;
+    cursor: pointer;
+    font-size: 1rem;
+    min-height: 52px;
+    padding: 14px 24px;
+    position: relative;
+    color: #000;
+} */
+.mainsection .innersection .content .checkbox {
+    font-feature-settings: "ss01";
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 160%;
+    color: #626266;
+    cursor: pointer;
+}
+.mainsection .innersection .content .checkbox input {
+    border-width: 2px;
+    box-shadow: 0 0 0 5px rgba(255, 117, 87, .2);
+    outline: none;
+    margin-right: 10px;
+}
+.mainsection .innersection .content .checkbox input:focus, .mainsection .innersection .content .checkbox input:focus-visible, .mainsection .innersection .content .checkbox input:focus-within {
+    border-color: #7856ff;
+    outline: none;
+    box-shadow: 0 0 0 5px rgba(120, 86, 255, .2);
+}
+.mainsection .innersection .content .checkbox a {
+    color: #626266;
+    cursor: pointer;
+}
+/* .mainsection .innersection .content button {
+    background-color: #7856ff;
+    background-image: linear-gradient(2deg, #7856ff 0.97%, #9075ff 96.96%);
+    box-shadow: inset 0 -1px 0 #5028c0, inset 0 1px 0 rgba(255, 255, 255, .2);
+    color: #fff;
+    appearance: none;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border: none;
+    box-shadow: 0 0 0 transparent;
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+    height: 43px;
+    border-radius: 96px;
+    transition: 0.5s ease-in-out;
+} */
+.mainsection .innersection .content button:hover {
+    border-radius: 4px;
+}
+.mainsection .innersection .content p {
+    font-feature-settings: "ss01";
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 160%;
+    color: #626266;
+}
+.mainsection .innersection .content p a {
+    color: #5028c0;
+    text-decoration: none;
+    text-underline-offset: 2px;
+    transition-duration: 0.3s;
+    transition-property: background-color, color, border-color, box-shadow;
+    transition-timing-function: linear;
+    will-change: background-color, color, border-color, box-shadow;
+}
