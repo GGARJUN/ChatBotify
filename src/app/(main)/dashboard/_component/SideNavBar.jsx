@@ -1,36 +1,47 @@
 'use client';
 
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { BookOpen, LogOut, Loader2, Bot, LayoutDashboard, BookOpenText, UserRound } from 'lucide-react';
+import { LogOut, Loader2, Bot, LayoutDashboard, BookOpenText, UserRound } from 'lucide-react';
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { authServices } from '@/lib/services/auth';
-import { Amplify } from 'aws-amplify';
-import amplifyConfig from '@/lib/config/amplify';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 function SideNavBar() {
-    const [loader, setLoader] = useState(false);
     const router = useRouter();
-
+    const { logout } = useAuth(); // ✅ This handles clearing user state
+    const [loader, setLoader] = useState(false);
+  
     const handleLogout = async (e) => {
-        e.preventDefault(); // Prevent default Link navigation
-        setLoader(true);
-        console.log('Amplify config on mount:', Amplify.configure(amplifyConfig));
-        try {
-            await authServices.logout();
-            localStorage.removeItem('idToken'); // Clear stored token
-            toast.success('You have been logged out successfully');
-            router.push('/'); // Redirect to homepage
-        } catch (error) {
-            toast.error('Unable to logout. Please try again later.');
-            console.error('Logout error:', error);
-        } finally {
-            setLoader(false);
-        }
+      e.preventDefault(); // Prevent default if used inside Link/form
+      setLoader(true);
+  
+      try {
+        // Optional: Call your backend/logout API if needed
+        // await authServices.logout(); // only if necessary
+  
+        // ✅ Clear localStorage tokens
+        localStorage.removeItem('idToken');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+  
+        // ✅ Call context logout method to update global state
+        logout();
+  
+        // ✅ Show success message
+        toast.success('You have been logged out successfully');
+  
+        // ✅ Redirect to homepage or login page
+        router.push('/'); // or '/login'
+      } catch (error) {
+        console.error('Logout error:', error);
+        toast.error('Unable to logout. Please try again later.');
+      } finally {
+        setLoader(false);
+      }
     };
-
     return (
         <div className="bg-white/80 backdrop-blur-lg my-3 ml-3 rounded-2xl shadow-2xl px-3 py-2 h-[calc(100vh-1.5rem)] flex flex-col justify-between transition-all duration-300">
             {/* Top Section: User Profile */}
@@ -55,7 +66,7 @@ function SideNavBar() {
                             <h2 className="font-medium text-gray-700 group-hover:text-white">Dashboard</h2>
                         </div>
                     </Link>
-                    <Link href="/dashboard/bot">
+                    <Link href="/bots">
                         <div className="flex gap-4 items-center cursor-pointer py-3 px-4 rounded-lg hover:bg-[#5f27cd] hover:text-white transition-all duration-300 group">
                             <Bot className="w-5 h-5 text-[#5f27cd] group-hover:text-white transition-colors duration-300" />
                             <h2 className="font-medium text-gray-700 group-hover:text-white">Bots</h2>

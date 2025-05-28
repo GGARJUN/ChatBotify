@@ -1,3 +1,4 @@
+'use client';
 import FQA from '@/pages/FQA';
 import Pricing from '@/pages/Pricing';
 import OurCustomers from '@/pages/OurCustomers';

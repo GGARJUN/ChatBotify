@@ -1,10 +1,15 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import SideNavBar from './_component/SideNavBar';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+
+
 
 function DashboardLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 
   return (
     <div className="h-screen bg-gradient-to-br from-gray-100 to-gray-300 overflow-hidden">
@@ -40,7 +45,7 @@ function DashboardLayout({ children }) {
 
         {/* Main Content */}
         <div className="flex-1 md:ml-72  px-3 py-3 ">
-          <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-6 h-[calc(100vh-1.5rem)] ">
+          <div className="  p-6 h-[calc(100vh-1.5rem)] ">
             {children}
           </div>
         </div>

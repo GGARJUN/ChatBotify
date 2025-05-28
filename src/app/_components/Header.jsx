@@ -1,3 +1,4 @@
+"use client"
 import { Button } from '@/components/ui/button'
 import { CircleDotDashed } from 'lucide-react'
 import Link from 'next/link'
@@ -37,10 +38,12 @@ function Header() {
 
       {/* CTA Buttons */}
       <div className="flex items-center gap-5">
-        <h2 className="text-primary font-semibold cursor-pointer hidden md:block">
-          Sign In
-        </h2>
-        <Link href="/auth/pages/login">
+        <Link href="/dashboard">
+          <h2 className="text-primary font-semibold cursor-pointer hidden md:block">
+            Sign In
+          </h2>
+        </Link>
+        <Link href="/auth/register">
           <Button className="cursor-pointer">Get Started</Button>
         </Link>
 

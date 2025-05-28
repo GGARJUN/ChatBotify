@@ -1,7 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import '../lib/config/amplify'; // Import Amplify config early
+import { AuthProvider } from "@/context/AuthContext";
+
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -23,9 +25,10 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        
-        {children}
-        <Toaster position="top-center" richColors />
+        <AuthProvider>
+            {children}
+            <Toaster position="top-center" richColors />
+        </AuthProvider>
       </body>
     </html>
   );
