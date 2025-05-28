@@ -14,6 +14,6 @@ const amplifyConfig = {
 
 // Configure Amplify on import
 Amplify.configure(amplifyConfig, { ssr: false });
-console.log('Amplify configured with:', amplifyConfig);
+// console.log('Amplify configured with:', amplifyConfig);
 
 export default amplifyConfig;

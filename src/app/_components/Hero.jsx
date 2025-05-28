@@ -16,7 +16,7 @@ function Hero() {
       <Pricing />
       <FQA />
       <div className='bg-primary w-full  mt-10 flex justify-center items-center '>
-        <p className='text-white py-5'>© 2025 recrute, All Rights Reserved. Design By Chatbotify</p>
+        <p className='text-white py-5'>© 2025 Chatbotify, All Rights Reserved. Design By Chatbotify</p>
       </div>
     </div >
   );

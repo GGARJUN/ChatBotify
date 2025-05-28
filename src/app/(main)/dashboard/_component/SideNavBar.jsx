@@ -55,19 +55,19 @@ function SideNavBar() {
                             <h2 className="font-medium text-gray-700 group-hover:text-white">Dashboard</h2>
                         </div>
                     </Link>
-                    <Link href="/bots">
+                    <Link href="/dashboard/bot">
                         <div className="flex gap-4 items-center cursor-pointer py-3 px-4 rounded-lg hover:bg-[#5f27cd] hover:text-white transition-all duration-300 group">
                             <Bot className="w-5 h-5 text-[#5f27cd] group-hover:text-white transition-colors duration-300" />
                             <h2 className="font-medium text-gray-700 group-hover:text-white">Bots</h2>
                         </div>
                     </Link>
-                    <Link href="/knowledge-base">
+                    <Link href="/dashboard/knowledge-base">
                         <div className="flex gap-4 items-center cursor-pointer py-3 px-4 rounded-lg hover:bg-[#5f27cd] hover:text-white transition-all duration-300 group">
                             <BookOpenText className="w-5 h-5 text-[#5f27cd] group-hover:text-white transition-colors duration-300" />
                             <h2 className="font-medium text-gray-700 group-hover:text-white">Knowledge Base</h2>
                         </div>
                     </Link>
-                    <Link href="/profile">
+                    <Link href="/dashboard/profile">
                         <div className="flex gap-4 items-center cursor-pointer py-3 px-4 rounded-lg hover:bg-[#5f27cd] hover:text-white transition-all duration-300 group">
                             <UserRound className="w-5 h-5 text-[#5f27cd] group-hover:text-white transition-colors duration-300" />
                             <h2 className="font-medium text-gray-700 group-hover:text-white">Profile</h2>
