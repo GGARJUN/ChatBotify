@@ -12,7 +12,7 @@ function DashboardLayout({ children }) {
 
 
   return (
-    <div className="h-screen bg-gradient-to-br from-gray-100 to-gray-300 overflow-hidden">
+    <div className=" ">
       {/* Top Bar for Mobile */}
       <div className="md:hidden flex items-center justify-between p-4 bg-white shadow-md">
         <h1 className="text-xl font-bold text-[#5f27cd]">Chatbotify</h1>
@@ -45,7 +45,7 @@ function DashboardLayout({ children }) {
 
         {/* Main Content */}
         <div className="flex-1 md:ml-72  px-3 py-3 ">
-          <div className="  p-6 h-[calc(100vh-1.5rem)] ">
+          <div className="p-6  ">
             {children}
           </div>
         </div>
@@ -55,3 +55,5 @@ function DashboardLayout({ children }) {
 }
 
 export default DashboardLayout;
+
+//h-[calc(100vh-1.5rem)]

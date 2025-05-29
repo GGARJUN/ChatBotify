@@ -1,70 +1,39 @@
+// app/bots/new/page.jsx
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { createBot } from '@/lib/api/bots';
 import BotDialog from '@/app/_components/BotComponents/BotDialog';
+import { createBot } from '@/lib/api/bots';
 
 export default function CreateBotPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (formData) => {
-    setLoading(true);
     try {
-      // Verify authentication
-      let token;
-      try {
-        const token = localStorage.getItem('idToken');
-        if (!token) {
-          toast.error('Authentication required. Please login again.');
-          router.push('/auth/login');
-          console.log('Authentication required. Please login again.');
-          
-          return;
-        }
-      } catch (authError) {
-        console.error('Authentication error:', authError);
+      const token = localStorage.getItem('idToken');
+      if (!token) {
         toast.error('Authentication required. Please login again.');
-        router.push('/auth/pages/login');
+        router.push('/auth/login');
         return;
       }
 
-      const botData = {
+      const botPayload = {
         clientId: formData.clientId,
-        name: formData.name,
-        description: formData.description,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
         status: formData.status,
-        billing: {
-          billingType: formData.billing.billingType,
-          priceInCents: Number(formData.billing.priceInCents),
-          billingStartDate: new Date(formData.billing.billingStartDate).toISOString(),
-          billingEndDate: new Date(formData.billing.billingEndDate).toISOString(),
-          isBillingActive: Boolean(formData.billing.isBillingActive),
-          stripeSubscriptionId: formData.billing.stripeSubscriptionId,
-        },
       };
 
-      const response = await createBot(botData, token);
+      const response = await createBot(botPayload, token);
+      console.log("Sending payload:", botPayload);
       toast.success('Bot created successfully!');
       router.push('/bots');
+
       return response;
     } catch (error) {
       console.error('Error creating bot:', error);
-      let errorMessage = 'Failed to create bot';
-      if (error.response?.status === 401) {
-        errorMessage = 'Unauthorized: Invalid or expired token. Please login again.';
-        router.push('/auth/pages/login');
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      toast.error(errorMessage);
-      throw error;
-    } finally {
-      setLoading(false);
+      toast.error(error.message || 'Failed to create bot');
     }
   };
 
@@ -79,7 +48,7 @@ export default function CreateBotPage() {
             </p>
           </div>
           <div className="mt-6">
-            <BotDialog onSubmit={handleSubmit} loading={loading} />
+            <BotDialog onSubmit={handleSubmit} />
           </div>
         </div>
       </div>
