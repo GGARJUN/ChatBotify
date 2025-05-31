@@ -1,27 +1,15 @@
 'use client';
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import EditBotDialog from './EditBotDialog';
+import { FaRobot, FaEye, FaTrash } from 'react-icons/fa';
+import { Edit } from 'lucide-react';
+import EditBotDialog from '../../(main)/dashboard/bots/_components/EditBotDialog';
 import { updateBot } from '@/lib/api/bots';
-import { FaEye, FaRobot } from 'react-icons/fa';
-import { Delete, Edit } from 'lucide-react';
-import { FaTrash } from 'react-icons/fa6';
+import Link from 'next/link';
 
-
-export default function BotTable({ bots, onBotsUpdate }) {
+export default function DocumentTable({ bots, onBotsUpdate }) {
   const [editOpen, setEditOpen] = useState(false);
   const [selectedBot, setSelectedBot] = useState(null);
-  const { user } = useAuth();
 
   const handleEditClick = (bot) => {
     setSelectedBot(bot);
@@ -31,41 +19,55 @@ export default function BotTable({ bots, onBotsUpdate }) {
   const handleUpdate = async (botId, data) => {
     try {
       const token = localStorage.getItem('idToken');
-      if (!token) throw new Error('Authentication required');
+      if (!token) {
+        toast.error('Authentication required.');
+        return;
+      }
 
       const updatedBot = await updateBot(botId, data, token);
 
-      // Optimistically update UI
+      // Optimistically update bot list
       if (onBotsUpdate) {
         onBotsUpdate((prev) =>
-          prev.map((bot) => (bot.id === updatedBot.id ? updatedBot : bot)
-          ))
+          prev.map((b) => (b.id === updatedBot.id ? updatedBot : b))
+        );
       }
 
       setEditOpen(false);
     } catch (error) {
-      console.error('Update failed:', error);
+      console.error('Error updating bot:', error.message);
     }
   };
+
+  if (!bots || bots.length === 0) {
+    return (
+      <div className="text-center py-6 text-gray-500">
+        No bots found
+      </div>
+    );
+  }
 
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {bots && bots.length > 0 ? (
-          bots.map((bot) => (
+        {bots.map((item, index) => {
+          const bot = item.bot || item;
+
+          return (
             <div
-              key={bot.id}
+              key={bot.id || index}
               className="bg-white p-5 shadow-lg rounded-xl border border-gray-100 hover:shadow-xl transition-shadow"
             >
               <div className="flex items-center gap-4">
                 <div
-                  className={`bg-blue-200/50 rounded-full w-14 h-14 flex justify-center items-center ${bot.status === 'ACTIVE'
-                    ? 'text-blue-500 bg-blue-200/50'
-                    : 'text-red-500 bg-red-200/50'
+                  className={`rounded-full w-14 h-14 flex justify-center items-center ${bot.status === 'ACTIVE'
+                      ? 'bg-blue-200/50 text-blue-500'
+                      : 'bg-red-200/50 text-red-500'
                     }`}
                 >
                   <FaRobot className="w-8 h-8" />
                 </div>
+
                 <div className="flex-1 min-w-0">
                   <h2 className="font-bold text-sm md:text-base text-slate-900 truncate">
                     {bot.name}
@@ -78,12 +80,13 @@ export default function BotTable({ bots, onBotsUpdate }) {
                     })}
                   </p>
                 </div>
+
                 <span
                   className={`px-2 py-1 rounded-md text-xs font-medium whitespace-nowrap ${bot.status === 'ACTIVE'
-                    ? 'bg-green-100 text-green-700'
-                    : bot.status === 'DRAFT'
-                      ? 'bg-yellow-100 text-yellow-700'
-                      : 'bg-red-100 text-red-700'
+                      ? 'bg-green-100 text-green-700'
+                      : bot.status === 'DRAFT'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-red-100 text-red-700'
                     }`}
                 >
                   {bot.status}
@@ -102,13 +105,15 @@ export default function BotTable({ bots, onBotsUpdate }) {
                     <Edit size={14} />
                     Edit
                   </button>
-                  <button
-                    className="text-slate-600 font-medium flex items-center gap-1 hover:underline focus:outline-none"
-                    aria-label="Preview bot"
-                  >
-                    <FaEye size={14} />
-                    Preview
-                  </button>
+                  <Link href={`/dashboard/${bot.id}`}>
+                    <button
+                      className="text-slate-600 font-medium flex items-center gap-1 hover:underline focus:outline-none"
+                      aria-label="Preview bot"
+                    >
+                      <FaEye size={14} />
+                      Preview
+                    </button>
+                  </Link>
                   <button
                     className="text-red-600 font-medium flex items-center gap-1 hover:underline focus:outline-none"
                     aria-label="Delete bot"
@@ -119,18 +124,8 @@ export default function BotTable({ bots, onBotsUpdate }) {
                 </div>
               </div>
             </div>
-          ))
-        ) : (
-          <div className='flex justify-center items-center gap-5'>
-            {/* Skeleton cards */}
-            {[...Array(3)].map((_, index) => (
-              <div
-                key={index}
-                className="bg-slate-200  animate-pulse w-80 rounded-xl border border-gray-200 p-5 h-40"
-              ></div>
-            ))}
-          </div>
-        )}
+          );
+        })}
       </div>
       {/* <Table>
         <TableHeader>

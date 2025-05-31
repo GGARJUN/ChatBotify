@@ -2,12 +2,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function BotForm({ onSubmit, loading }) {
   const [formData, setFormData] = useState({
@@ -51,7 +49,7 @@ export default function BotForm({ onSubmit, loading }) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {/* Client ID - readonly */}
-        <div>
+        {/* <div>
           <Label htmlFor="clientId" className="text-sm font-medium text-[#1b0b3b]">
             Client ID
           </Label>
@@ -63,7 +61,7 @@ export default function BotForm({ onSubmit, loading }) {
             readOnly
             className="mt-1 border-[#eae6e7] bg-gray-50 cursor-not-allowed"
           />
-        </div>
+        </div> */}
 
         {/* Bot Name */}
         <div>
@@ -97,7 +95,7 @@ export default function BotForm({ onSubmit, loading }) {
         </div>
 
         {/* Status */}
-        <div>
+        {/* <div>
           <Label htmlFor="status" className="text-sm font-medium text-[#1b0b3b]">
             Status
           </Label>
@@ -111,7 +109,7 @@ export default function BotForm({ onSubmit, loading }) {
               <SelectItem value="DRAFT">DRAFT</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
       </div>
 
       <div className="flex justify-end">

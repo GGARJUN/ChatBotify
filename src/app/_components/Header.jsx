@@ -38,7 +38,7 @@ function Header() {
 
       {/* CTA Buttons */}
       <div className="flex items-center gap-5">
-        <Link href="/dashboard">
+        <Link href="/auth/login">
           <h2 className="text-primary font-semibold cursor-pointer hidden md:block">
             Sign In
           </h2>

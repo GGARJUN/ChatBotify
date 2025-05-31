@@ -2,13 +2,30 @@
 import React, { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import SideNavBar from './_component/SideNavBar';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-
-
+import { useRouter } from 'next/navigation';
 
 function DashboardLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user, loading: authLoading ,logout} = useAuth();
+  const router = useRouter();
+
+  
+    // Redirect if not authenticated
+    useEffect(() => {
+      if (!authLoading && !user) {
+        logout()
+        router.push('/auth/login');
+      }
+    }, [authLoading, user, router]);
+  
+    if (authLoading || !user) {
+      return (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      );
+    }
 
 
   return (
@@ -40,7 +57,7 @@ function DashboardLayout({ children }) {
 
         {/* Desktop Sidebar */}
         <div className="hidden md:block md:w-72 fixed h-screen">
-          <SideNavBar />
+          <SideNavBar  />
         </div>
 
         {/* Main Content */}

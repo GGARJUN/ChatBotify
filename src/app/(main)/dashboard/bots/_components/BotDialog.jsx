@@ -10,7 +10,7 @@ export default function BotDialog({ onSubmit, loading }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-to-t from-[#7856ff] to-[#9075ff] text-white hover:rounded-md transition-all duration-300">
+        <Button className="bg-gradient-to-t cursor-pointer from-[#7856ff] to-[#9075ff] text-white hover:rounded-md transition-all duration-300">
           Create New Bot
         </Button>
       </DialogTrigger>

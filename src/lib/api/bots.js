@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const API_BASE_URL = 'https://p12k32pylk.execute-api.us-east-1.amazonaws.com/dev';
 
@@ -29,7 +30,7 @@ export const createBot = async (botData, token) => {
 
 export const getBots = async (token) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/rc/bots/`, {
+    const response = await axios.get(`${API_BASE_URL}/rc/bots/list`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -46,6 +47,33 @@ export const getBots = async (token) => {
 };
 
 
+
+
+export const getSingleBot = async (botId, token, includeDocs = true) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/rc/bots/${botId}/detail?includeDocs=${includeDocs}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log('Fetched Bot Data:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching bot details:', error.response?.data || error.message);
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to fetch bot details';
+
+    toast.error(message);
+    throw new Error(message);
+  }
+};
+
 export const updateBot = async (botId, updateData, token) => {
   try {
     const response = await axios.patch(
@@ -58,9 +86,17 @@ export const updateBot = async (botId, updateData, token) => {
         },
       }
     );
+
+    toast.success('Bot updated successfully!');
     return response.data;
   } catch (error) {
-    console.error('Error updating bot:', error);
-    throw new Error(error.response?.data?.message || 'Failed to update bot');
+    console.error('Error updating bot:', error.response?.data || error.message);
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to update bot';
+
+    toast.error(message);
+    throw new Error(message);
   }
 };
