@@ -7,6 +7,7 @@ import BotDialog from './BotDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import BotForm from './BotFom';
+import { FaPlus } from 'react-icons/fa6';
 
 function CreateBot() {
   const router = useRouter();
@@ -54,18 +55,19 @@ function CreateBot() {
     <div>
       {/* <BotDialog onSubmit={handleSubmit} loading={pageLoading} /> */}
       <Dialog>
-      <DialogTrigger asChild>
-        <Button className="bg-gradient-to-t cursor-pointer from-[#7856ff] to-[#9075ff] text-white hover:rounded-md transition-all duration-300">
-          Create New Bot
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px] bg-white rounded-2xl shadow-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#1b0b3b]">Create New Bot</DialogTitle>
-        </DialogHeader>
-        <BotForm onSubmit={handleSubmit} loading={pageLoading} />
-      </DialogContent>
-    </Dialog>
+        <DialogTrigger asChild>
+          <Button >
+            <FaPlus />
+            Create New Bot
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[625px] bg-white rounded-2xl shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-[#1b0b3b]">Create New Bot</DialogTitle>
+          </DialogHeader>
+          <BotForm onSubmit={handleSubmit} loading={pageLoading} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
