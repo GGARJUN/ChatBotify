@@ -14,6 +14,7 @@ import DocumentUploadDialog from '../knowledge-base/_components/DocumentUploadDi
 import { FaUpload } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { getDocuments } from '@/lib/api/documents';
+import Link from 'next/link';
 
 export default function BotsPage() {
   const [bots, setBots] = useState([]);
@@ -40,6 +41,8 @@ export default function BotsPage() {
       });
 
       setBots(sortedBots);
+      console.log(bots);
+
     } catch (error) {
       toast.error('Failed to load bots');
     }
@@ -106,19 +109,20 @@ export default function BotsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Upload Documents</h1>
           <p className="text-gray-500">Upload and manage documents for your bots</p>
         </div>
-        <Button onClick={() => setUploadDialogOpen(true)}>
+        {/* <Button onClick={() => setUploadDialogOpen(true)}>
           <FaUpload className="mr-2" /> Upload Document
-        </Button>
+        </Button> */}
+        <DocumentUploadDialog />
       </div>
 
-      <DocumentUploadDialog
+      {/* <DocumentUploadDialog
         open={uploadDialogOpen}
         onOpenChange={(open) => {
           setUploadDialogOpen(open);
           if (!open) fetchDocuments(); // Refresh after upload
         }}
         botId="V11WFMX"
-      />
+      /> */}
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
@@ -138,25 +142,20 @@ export default function BotsPage() {
               return (
                 <div
                   key={bot.id || index}
-                  className=" bg-white p-5  shadow-lg rounded-xl border border-gray-100 hover:shadow-xl transition-shadow"
+                  className="bg-white p-5 shadow-lg rounded-xl border border-gray-100 hover:shadow-xl transition-shadow"
                 >
                   {/* Bot Header */}
                   <div className="flex items-center gap-4 mb-4">
                     <div
-                      className={`rounded-full w-14 h-14 flex justify-center items-center ${
-                        bot.status === 'ACTIVE'
-                          ? 'bg-blue-200/50 text-blue-500'
-                          : 'bg-red-200/50 text-red-500'
-                      }`}
+                      className={`rounded-full w-14 h-14 flex justify-center items-center ${bot.status === 'ACTIVE' ? 'bg-blue-200/50 text-blue-500' : 'bg-red-200/50 text-red-500'
+                        }`}
                     >
                       <FaRobot className="w-8 h-8" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h2 className="font-bold text-sm md:text-base text-slate-900 truncate">
-                        {bot.name}
-                      </h2>
+                      <h2 className="font-bold text-sm md:text-base text-slate-900 truncate">{bot.name}</h2>
                       <p className="text-xs text-gray-400">
-                        {docs.length > 0 && `${docs.length} Documents Linked`}
+                        {docs.length > 0 && `${docs.length} Document${docs.length > 1 ? 's' : ''} Linked`}
                       </p>
                     </div>
                   </div>
@@ -199,21 +198,19 @@ export default function BotsPage() {
                     )}
                   </div>
 
-                  {/* Manage Button */}
+                  {/* Manage Documents Button - Only shown once per bot */}
                   <div className="mt-4">
-                    <Button
-                      className="w-full"
-                      onClick={() => toast.info('Manage documents coming soon')}
-                    >
-                      Manage Documents
-                    </Button>
+                    <Link href={`/dashboard/bots/${bot.id}`} passHref>
+                      <Button className="w-full">Manage Documents</Button>
+                    </Link>
                   </div>
                 </div>
               );
             })
           )}
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 }

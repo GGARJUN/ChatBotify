@@ -6,92 +6,189 @@ import { getSingleBot } from '@/lib/api/bots';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { FiLink, FiTrash } from 'react-icons/fi';
+import { getDocuments } from '@/lib/api/documents';
+import { FaFilePdf, FaFileWord } from 'react-icons/fa6';
+import { BiSolidFileTxt } from 'react-icons/bi';
+import { formatFileSize } from '@/lib/utils';
 
 export default function BotDetailPage() {
   const router = useRouter();
   const { id } = useParams(); // Get bot ID from URL
   const [botData, setBotData] = useState(null);
   const { user } = useAuth();
+  const [alldocuments, setAllDocuments] = useState([]);
 
-  useEffect(() => {
-    const fetchBotDetails = async () => {
-      try {
-        const token = localStorage.getItem('idToken');
-        if (!token || !user) {
-          toast.error('Authentication required. Please log in.');
-          router.push('/auth/login');
-          return;
-        }
-
-        const data = await getSingleBot(id, token, true); // includeDocs = true
-        console.log(id);
-        
-        setBotData(data);
-      } catch (error) {
-        console.error('Error fetching bot:', error.message);
-        toast.error('Failed to load bot details');
-        router.push('/dashboard');
+  const fetchBotDetails = async () => {
+    try {
+      const token = localStorage.getItem('idToken');
+      if (!token || !user) {
+        toast.error('Authentication required. Please log in.');
+        router.push('/auth/login');
+        return;
       }
-    };
 
+      const data = await getSingleBot(id, token, true); // includeDocs = true
+      console.log("Fetch Bot Details", data);
+
+      setBotData(data);
+    } catch (error) {
+      console.error('Error fetching bot:', error.message);
+      toast.error('Failed to load bot details');
+      router.push('/dashboard');
+    }
+  };
+
+  const fetchDocuments = async () => {
+
+    try {
+      const token = localStorage.getItem('idToken');
+      if (!token) {
+        router.push('/auth/login');
+        return;
+      }
+
+      const data = await getDocuments(token);
+      console.log("data", data);
+
+      setAllDocuments(data || []);
+    } catch (error) {
+      console.error('Failed to fetch documents:', error);
+      toast.error('Failed to load documents. Please try again.');
+    }
+  };
+  useEffect(() => {
+    fetchDocuments();
     fetchBotDetails();
   }, [id, user]);
+
+
+    const getFileTypeIcon = (fileName) => {
+      if (!fileName) return null;
+  
+      const lowercaseName = fileName.toLowerCase();
+      if (lowercaseName.endsWith('.pdf')) {
+        return <FaFilePdf className="text-red-500 w-8 h-8 mt-1" />;
+      } else if (lowercaseName.endsWith('.doc') || lowercaseName.endsWith('.docx')) {
+        return <FaFileWord className="text-blue-600 w-8 h-8 mt-1" />;
+      } else if (lowercaseName.endsWith('.txt')) {
+        return <BiSolidFileTxt className="text-green-600 w-8 h-8 mt-1" />;
+      } else {
+        return <span className="text-gray-400 w-8 h-8 mt-1">📄</span>;
+      }
+    };
+  
+  
+    const getFileTypeLabel = (fileName) => {
+      if (!fileName) return 'Document';
+  
+      const lowercaseName = fileName.toLowerCase();
+      if (lowercaseName.endsWith('.pdf')) {
+        return 'PDF Document';
+      } else if (lowercaseName.endsWith('.doc') || lowercaseName.endsWith('.docx')) {
+        return 'Word Document';
+      } else if (lowercaseName.endsWith('.txt')) {
+        return 'Text File';
+      } else {
+        return 'Document';
+      }
+    };
 
   if (!botData) {
     return <div className="p-6">Loading...</div>;
   }
 
   const { bot, documents = [] } = botData;
+    // Filter available documents to exclude those already linked
+    const availableDocuments = alldocuments.filter(
+      (doc) => !documents.some((linkedDoc) => linkedDoc.id === doc.id)
+    );
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-4">{bot.name}</h1>
-      <p className="text-sm text-gray-500 mb-6">{bot.description}</p>
+    {/* Header */}
+    <div className="mb-8">
+      <h1 className="text-2xl font-bold text-gray-800 mb-2">{bot.name}</h1>
+      <p className="text-sm text-gray-500">Manage document associations</p>
+    </div>
 
+    {/* Document Associations Section */}
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <h2 className="text-lg font-semibold mb-4">Document Associations</h2>
+      <p className="text-sm text-gray-500 mb-6">
+        Link or unlink documents to enhance your bot's knowledge base.
+      </p>
+
+      {/* Currently Linked Documents */}
       <div className="mb-6">
-        <span className={`inline-flex px-2 py-1 text-xs font-semibold leading-5 rounded-full ${
-          bot.status === 'ACTIVE'
-            ? 'bg-green-100 text-green-800'
-            : bot.status === 'DRAFT'
-            ? 'bg-yellow-100 text-yellow-800'
-            : 'bg-red-100 text-red-800'
-        }`}>
-          Status: {bot.status}
-        </span>
-      </div>
-
-      {/* Bot Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div>
-          <strong>Created At:</strong> {new Date(bot.createdAt).toLocaleString()}
-        </div>
-        <div>
-          <strong>Last Updated:</strong> {new Date(bot.updatedAt).toLocaleString()}
-        </div>
-      </div>
-
-      {/* Documents Section */}
-      <div>
-        <h2 className="text-xl font-semibold mb-3">Documents</h2>
-        {documents.length > 0 ? (
-          <ul className="list-disc pl-5 space-y-2">
-            {documents.map((doc) => (
-              <li key={doc.id} className="text-sm">
-                <a
-                  href={doc.s3Url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
+        <h3 className="text-lg font-semibold mb-2">Currently Linked Documents</h3>
+        <ul className="space-y-4">
+          {documents.length > 0 ? (
+            documents.map((doc) => (
+              <li key={doc.id} className="flex items-center justify-between bg-gray-100 p-4 rounded">
+                <div className="flex items-center gap-2">
+                <div className='flex items-center gap-3'>
+                {getFileTypeIcon(doc.name)}
+                <div>
+                  <h3 className="font-bold text-sm md:text-base ">
+                    {doc.fileName || 'Untitled Document'}
+                  </h3>
+                  <p className="text-sm text-slate-500 mt-1">
+                    <span>{getFileTypeLabel(doc.fileName)} - </span>
+                    {formatFileSize(doc.fileSizeBytes)}
+                  </p>
+                </div>
+              </div>
+                </div>
+                <button
+                  onClick={() => handleUnlink(doc.id)}
+                  className="text-red-500 hover:text-red-700 flex items-center gap-1"
                 >
-                  {doc.name}
-                </a>
+                  <FiTrash size={16} /> Unlink
+                </button>
               </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-gray-500">No documents associated with this bot.</p>
-        )}
+            ))
+          ) : (
+            <p className="text-sm text-gray-500">No documents currently linked.</p>
+          )}
+        </ul>
+      </div>
+
+      {/* Available Documents to Link */}
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Available Documents to Link</h3>
+        <ul className="space-y-4">
+          {availableDocuments.length > 0 ? (
+            availableDocuments.map((doc) => (
+              <li key={doc.id} className="flex items-center justify-between bg-gray-100 p-4 rounded">
+                <div className="flex items-center gap-2">
+              <div className='flex items-center gap-3'>
+                {getFileTypeIcon(doc.fileName)}
+                <div>
+                  <h3 className="font-bold text-sm md:text-base ">
+                    {doc.fileName || 'Untitled Document'}
+                  </h3>
+                  <p className="text-sm text-slate-500 mt-1">
+                    <span>{getFileTypeLabel(doc.fileName)} - </span>
+                    {formatFileSize(doc.fileSizeBytes)}
+                  </p>
+                </div>
+              </div>
+                </div>
+                <button
+                  onClick={() => handleLink(doc.id)}
+                  className="text-blue-500 hover:text-blue-700 flex items-center gap-1"
+                >
+                  <FiLink size={16} /> Link
+                </button>
+              </li>
+            ))
+          ) : (
+            <p className="text-sm text-gray-500">No documents available to link.</p>
+          )}
+        </ul>
       </div>
     </div>
+  </div>
   );
 }

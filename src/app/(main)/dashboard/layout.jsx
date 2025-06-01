@@ -10,10 +10,13 @@ function DashboardLayout({ children }) {
   const { user, loading: authLoading ,logout} = useAuth();
   const router = useRouter();
 
+
+
   
     // Redirect if not authenticated
     useEffect(() => {
-      if (!authLoading && !user) {
+      if (!authLoading && !user ) {
+        
         logout()
         router.push('/auth/login');
       }

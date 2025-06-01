@@ -60,7 +60,6 @@ export const getSingleBot = async (botId, token, includeDocs = true) => {
       }
     );
 
-    console.log('Fetched Bot Data:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching bot details:', error.response?.data || error.message);

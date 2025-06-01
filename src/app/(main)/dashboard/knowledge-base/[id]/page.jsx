@@ -26,7 +26,7 @@ export default function BotDetailPage() {
         }
 
         const data = await getSingleDocument(id, token); // includeDocs = true
-        console.log(id);
+        console.log(data);
 
         setBotData(data);
       } catch (error) {

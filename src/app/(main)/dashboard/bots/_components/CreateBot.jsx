@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import BotForm from './BotFom';
 import { FaPlus } from 'react-icons/fa6';
+import { createBot } from '@/lib/api/bots';
 
 function CreateBot() {
   const router = useRouter();

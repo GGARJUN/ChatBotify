@@ -30,7 +30,7 @@ export default function KnowledgeBasePage() {
 
             const data = await getDocuments(token);
             console.log("data", data);
-            
+
             setDocuments(data || []);
         } catch (error) {
             console.error('Failed to fetch documents:', error);
@@ -40,23 +40,7 @@ export default function KnowledgeBasePage() {
         }
     };
 
-    // Delete a document
-    // const handleDelete = async (documentId) => {
-    //     try {
-    //         const token = localStorage.getItem('idToken');
-    //         if (!token) {
-    //             toast.error('Authentication required.');
-    //             return;
-    //         }
 
-    //         await deleteDocument(documentId, token);
-    //         toast.success('Document deleted successfully');
-    //         fetchDocuments(); // Refresh documents
-    //     } catch (error) {
-    //         console.error('Error deleting document:', error.message);
-    //         toast.error('Failed to delete document');
-    //     }
-    // };
 
 
 
@@ -75,30 +59,50 @@ export default function KnowledgeBasePage() {
                     <h1 className="text-2xl font-bold text-gray-900">Knowledge Base</h1>
                     <p className="text-gray-500">Upload and manage documents for your bots</p>
                 </div>
-                <Button
+                {/* <Button
                     onClick={() => setUploadDialogOpen(true)}
                 >
                     <FaUpload />
                     Upload Document
-                </Button>
+                </Button> */}
+                <DocumentUploadDialog />
             </div>
 
-            <DocumentUploadDialog
-                open={uploadDialogOpen}
-                onOpenChange={(open) => {
-                    setUploadDialogOpen(open);
-                    if (!open) fetchDocuments(); // Refresh documents after upload
-                }}
-                botId="V11WFMX"
-            />
+            {/* <DocumentUploadDialog
+                // open={uploadDialogOpen}
+                // onOpenChange={(open) => {
+                //     setUploadDialogOpen(open);
+                //     if (!open) fetchDocuments(); // Refresh documents after upload
+                // }}
+                // botId="V11WFMX"
+            /> */}
 
             <div className="mt-8">
                 <h2 className="text-lg font-semibold text-gray-700 mb-4">Your Documents</h2>
-                    <DocumentCardList
-                        documents={documents}
-                        // onDelete={handleDelete}
-                    />
+                <DocumentCardList
+                    documents={documents}
+                />
             </div>
         </div>
     );
 }
+
+
+// onDelete={handleDelete}
+// Delete a document
+// const handleDelete = async (documentId) => {
+//     try {
+//         const token = localStorage.getItem('idToken');
+//         if (!token) {
+//             toast.error('Authentication required.');
+//             return;
+//         }
+
+//         await deleteDocument(documentId, token);
+//         toast.success('Document deleted successfully');
+//         fetchDocuments(); // Refresh documents
+//     } catch (error) {
+//         console.error('Error deleting document:', error.message);
+//         toast.error('Failed to delete document');
+//     }
+// };
