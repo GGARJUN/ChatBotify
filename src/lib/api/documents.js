@@ -3,48 +3,34 @@ import { toast } from 'sonner';
 
 const API_BASE_URL = 'https://p12k32pylk.execute-api.us-east-1.amazonaws.com/dev'; 
 
-// Upload document with botId, clientId, description, etc.
-// export const uploadDocument = async (formData, token) => {
-//   try {
-//     const response = await axios.post(`${API_BASE_URL}/rc/docs/upload`, formData, {
-//       headers: {
-//         'Content-Type': 'multipart/form-data',
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-
-//     console.log('Document uploaded successfully:', response.data);
-//     return response.data;
-//   } catch (error) {
-//     console.error('Error uploading document:', {
-//       status: error.response?.status,
-//       data: error.response?.data,
-//       message: error.message,
-//     });
-
-//     const errorMessage =
-//       error.response?.data?.message ||
-//       error.message ||
-//       'Failed to upload document';
-
-//     toast.error(errorMessage);
-//     throw new Error(errorMessage);
-//   }
-// };
-
-
 const API_BASE = 'https://080mcx9lu3.execute-api.us-east-1.amazonaws.com/dev';
+const API_BASE_RC = 'https://p12k32pylk.execute-api.us-east-1.amazonaws.com/dev';
+
+const FILE_TYPE_HEADERS = {
+  'application/pdf': 'application/pdf',
+  'text/plain': 'text/plain',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/png': 'image/png',
+  'image/jpeg': 'image/jpeg',
+  'text/csv': 'text/csv',
+  'application/json': 'application/json',
+  'application/zip': 'application/zip',
+  'video/mp4': 'video/mp4',
+};
 
 export const uploadFileToS3 = async (file, token, clientId) => {
   if (!file || !clientId) {
     throw new Error('Missing required fields: file or clientId');
   }
 
-  // Debug log
+  if (!FILE_TYPE_HEADERS[file.type]) {
+    throw new Error(`Unsupported file type: ${file.type}`);
+  }
+
   console.log('Preparing to upload file:', {
     name: file.name,
     type: file.type,
-    size: file.size
+    size: file.size,
   });
 
   const filename = encodeURIComponent(file.name);
@@ -52,38 +38,45 @@ export const uploadFileToS3 = async (file, token, clientId) => {
 
   try {
     console.log('Uploading to:', url);
-    
-    const response = await axios.put(url, file, {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+    const response = await fetch(url, {
+      method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': file.type,
-        'x-amz-meta-originalname': file.name, // Add original filename as metadata
+        'Content-Type': FILE_TYPE_HEADERS[file.type],
+        'x-amz-meta-originalname': file.name,
       },
-      timeout: 30000, // 30 second timeout
+      body: file,
+      signal: controller.signal,
     });
 
-    console.log('Upload response:', response);
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to upload file: ${errorText || response.statusText}`);
+    }
+
+    console.log('Upload successful');
     return {
       success: true,
       filename: filename,
-      s3Url: url,
+      s3Url: `s3://rc-doc-store-dev/${clientId}/${filename}`,
       fileType: file.type,
-      size: file.size
+      size: file.size,
     };
   } catch (error) {
     console.error('Upload error details:', {
-      config: error.config,
-      response: error.response,
-      message: error.message
+      url,
+      message: error.message,
     });
 
     let errorMessage = 'Failed to upload file';
-    if (error.response) {
-      errorMessage = error.response.data?.message || 
-                    JSON.stringify(error.response.data);
-    } else if (error.code === 'ECONNABORTED') {
-      errorMessage = 'Request timeout - server took too long to respond';
-    } else if (error.message === 'Network Error') {
+    if (error.name === 'AbortError') {
+      errorMessage = 'Request timed out - server took too long to respond';
+    } else if (error.message.includes('Failed to fetch')) {
       errorMessage = 'Network error - check your connection or CORS settings';
     } else {
       errorMessage = error.message;
@@ -92,27 +85,46 @@ export const uploadFileToS3 = async (file, token, clientId) => {
   }
 };
 
-export const createDocumentRecord = async (documentData, token) => {
-  if (!documentData || !token) {
-    throw new Error('Missing required fields: documentData or token');
-  }
-
-  const url = `${API_BASE_URL}/rc/docs/download`;
-  
+export const createDocumentRecord = async (documentRecord, token) => {
   try {
-    console.log('Creating document record:', documentData);
-    const response = await axios.post(url, documentData, {
+    const response = await fetch(`${API_BASE_RC}/rc/docs/md`, {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
-      timeout: 10000,
+      body: JSON.stringify({
+        clientId: documentRecord.clientId,
+        description: documentRecord.description,
+        s3Url: documentRecord.s3Url,
+      }),
     });
 
-    return response.data;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Failed to create document record');
+    }
+
+    let result;
+    const contentType = response.headers.get('content-type');
+
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.warn('Failed to parse JSON response:', jsonError);
+        result = { message: 'Document record created successfully' };
+      }
+    } else {
+      const text = await response.text();
+      console.warn('Non-JSON response received:', text);
+      result = { message: text || 'Document record created successfully' };
+    }
+
+    return result;
   } catch (error) {
-    console.error('Document record creation error:', error);
-    throw new Error(error.response?.data?.message || 'Failed to create document record');
+    console.error('Error in createDocumentRecord:', error);
+    throw error;
   }
 };
 
@@ -128,7 +140,6 @@ export const getDocuments = async (token) => {
       },
     });
 
-    console.log('Fetched documents:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching documents:', {
@@ -251,58 +262,99 @@ export const downloadDocument = async (docId, token, preview = false) => {
 };
 
 
-// const linkDocumentToBot = async (
+export const grantDocumentAccess = async (botId, documentId, clientId, token) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/rc/document-access`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        botId,
+        documentId,
+        clientId,
+      }),
+    });
 
-// ) => {
-//   const url = 'https://p12k32pylk.execute-api.us-east-1.amazonaws.com/dev/rc/document-access'; 
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to link document: ${errorText || response.statusText}`);
+    }
 
-//   const body = JSON.stringify({
-//     botId,
-//     documentId,
-//     clientId,
-//   });
+    let result;
+    const contentType = response.headers.get('content-type');
 
-//   const response = await fetch(url, {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//       Authorization: `Bearer ${token}`,
-//     },
-//     body,
-//   });
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.warn('Failed to parse JSON response:', jsonError);
+        result = { message: 'Document linked successfully, but no JSON response received' };
+      }
+    } else {
+      const text = await response.text();
+      console.warn('Non-JSON response received:', text);
+      result = { message: text || 'Document linked successfully' };
+    }
 
-//   if (!response.ok) {
-//     const errorData = await response.json();
-//     throw new Error(errorData.message || 'Failed to link document');
-//   }
+    return result;
 
-//   return await response.json();
-// };
+  } catch (error) {
+    console.error('Error in grantDocumentAccess:', error);
+    throw error;
+  }
+};
 
-// const unlinkDocumentFromBot = async (
+export const revokeDocumentAccess = async (accessId, token) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/rc/document-access/${accessId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-// ) => {
-//   const url = 'https://p12k32pylk.execute-api.us-east-1.amazonaws.com/dev/rc/document-access'; 
+    if (!response.ok) {
+      let errorMessage = response.statusText;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (jsonError) {
+          console.warn('Failed to parse JSON error response:', jsonError);
+        }
+      } else {
+        const errorText = await response.text();
+        errorMessage = errorText || errorMessage;
+      }
+      throw new Error(`Failed to revoke document access: ${errorMessage}`);
+    }
 
-//   const body = JSON.stringify({
-//     botId,
-//     documentId,
-//     clientId,
-//   });
+    let result;
+    const contentType = response.headers.get('content-type');
 
-//   const response = await fetch(url, {
-//     method: 'DELETE', // Assuming DELETE is supported
-//     headers: {
-//       'Content-Type': 'application/json',
-//       Authorization: `Bearer ${token}`,
-//     },
-//     body,
-//   });
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.warn('Failed to parse JSON response:', jsonError);
+        result = { message: 'Document access revoked successfully' };
+      }
+    } else {
+      const text = await response.text();
+      console.warn('Non-JSON response received:', text);
+      result = { message: text || 'Document access revoked successfully' };
+    }
 
-//   if (!response.ok) {
-//     const errorData = await response.json();
-//     throw new Error(errorData.message || 'Failed to unlink document');
-//   }
+    return result;
 
-//   return await response.json();
-// };
+  } catch (error) {
+    console.error('Error revoking document access:', {
+      endpoint: `${API_BASE_URL}/rc/document-access/${accessId}`,
+      error: error.message,
+    });
+    throw error;
+  }
+};
