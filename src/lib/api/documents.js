@@ -42,14 +42,14 @@ export const uploadFileToS3 = async (file, token, clientId) => {
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': FILE_TYPE_HEADERS[file.type],
-        // 'x-amz-meta-originalname': file.name,
+        
       },
       body: file,
-      signal: controller.signal,
+      // signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
@@ -59,7 +59,7 @@ export const uploadFileToS3 = async (file, token, clientId) => {
       throw new Error(`Failed to upload file: ${errorText || response.statusText}`);
     }
 
-    console.log('Upload successful');
+    console.log('Upload successful',response);
     return {
       success: true,
       filename: filename,
@@ -182,82 +182,76 @@ export const getSingleDocument = async (botId, token ) => {
   }
 };
 
-// Download document
-// export const downloadDocument = async (docId, token) => {
-//   try {
-//     const response = await axios.get(`${API_BASE_URL}/rc/docs/${docId}/download`, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//       responseType: 'blob', // Important for file downloads
-//     });
 
-//     // Extract filename from Content-Disposition header
-//     const disposition = response.headers['content-disposition'];
-//     let filename = 'document';
-//     if (disposition && disposition.indexOf('filename=') !== -1) {
-//       const matches = /filename="?([^"]+)"?/.exec(disposition);
-//       if (matches.length > 1) {
-//         filename = matches[1];
-//       }
-//     }
 
-//     // Create a link element and trigger download
-//     const blob = new Blob([response.data]);
-//     const url = window.URL.createObjectURL(blob);
-//     const link = document.createElement('a');
-//     link.href = url;
-//     link.setAttribute('download', filename);
-//     document.body.appendChild(link);
-//     link.click();
-//     link.remove();
-
-//     return true; // success
-//   } catch (error) {
-//     console.error('Error downloading document:', error);
-//     throw new Error('Failed to download document');
-//   }
-// };
-
-export const downloadDocument = async (docId, token, preview = false) => {
+export const downloadDocument = async (s3Url, docId, token, preview = false) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/rc/docs/${docId}/download`, {
+    const signUrl = `${API_BASE_RC}/rc/docs/sign?s3Url=${encodeURIComponent(s3Url)}`;
+    console.log('Fetching presigned URL from:', signUrl);
+
+    const presignedResponse = await fetch(signUrl, {
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      responseType: preview ? 'arraybuffer' : 'blob',
     });
 
-    if (preview) {
-      // Return raw data for preview
-      return response.data;
+    if (!presignedResponse.ok) {
+      const errorText = await presignedResponse.text();
+      throw new Error(`Failed to fetch presigned URL: ${errorText || presignedResponse.statusText}`);
     }
 
-    // Trigger download
-    const blob = new Blob([response.data]);
+    const presignedUrl = await presignedResponse.text();
+    if (!presignedUrl) {
+      throw new Error('No presigned URL received');
+    }
+
+    console.log('Presigned URL received:', presignedUrl);
+
+    const response = await fetch(presignedUrl, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to download document: ${errorText || response.statusText}`);
+    }
+
+    let filename = `document-${docId}`;
+    const disposition = response.headers.get('content-disposition');
+    if (disposition && disposition.includes('filename=')) {
+      const matches = /filename="?([^"]+)"?/.exec(disposition);
+      if (matches && matches[1]) {
+        filename = matches[1];
+      }
+    } else {
+      const urlParts = s3Url.split('/');
+      filename = decodeURIComponent(urlParts[urlParts.length - 1]);
+    }
+
+    if (preview) {
+      const arrayBuffer = await response.arrayBuffer();
+      return { data: arrayBuffer, filename };
+    }
+
+    const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-
-    // Extract filename from Content-Disposition header
-    const disposition = response.headers['content-disposition'];
-    let filename = 'document';
-    if (disposition && disposition.indexOf('filename=') !== -1) {
-      const matches = /filename="?([^"]+)"?/.exec(disposition);
-      if (matches.length > 1) {
-        filename = matches[1];
-      }
-    }
-
     link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     link.remove();
+    window.URL.revokeObjectURL(url);
 
-    return true; // success
+    return true;
   } catch (error) {
-    console.error('Error fetching document:', error);
-    throw new Error('Failed to fetch document');
+    console.error('Error downloading document:', {
+      docId,
+      s3Url,
+      message: error.message,
+    });
+    throw new Error(error.message || 'Failed to download document');
   }
 };
 
@@ -356,5 +350,50 @@ export const revokeDocumentAccess = async (accessId, token) => {
       error: error.message,
     });
     throw error;
+  }
+};
+
+
+export const deleteDocument = async (docId, token) => {
+  try {
+    const url = `${API_BASE_RC}/rc/docs/${docId}`;
+    console.log('Deleting document at:', url);
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorText = await response.text();
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorText = errorJson.message || errorText;
+      } catch (e) {
+        // Non-JSON response, use raw text
+      }
+      throw new Error(`Failed to delete document: ${errorText || response.statusText}`);
+    }
+
+    let result = { message: 'Document deleted successfully' };
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.warn('Failed to parse JSON response:', jsonError);
+      }
+    }
+
+    console.log('Delete successful:', result);
+    return result;
+  } catch (error) {
+    console.error('Error deleting document:', {
+      docId,
+      message: error.message,
+    });
+    throw new Error(error.message || 'Failed to delete document');
   }
 };

@@ -1,25 +1,34 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { FaFilePdf } from 'react-icons/fa';
-import { FaDownload, FaFileWord } from 'react-icons/fa6';
+import React from 'react';
+import { FaFilePdf, FaFileWord, FaDownload } from 'react-icons/fa6';
 import { BiSolidFileTxt } from 'react-icons/bi';
 import { AiOutlineDelete, AiOutlineEye } from 'react-icons/ai';
 import { formatFileSize } from '@/lib/utils';
 import { toast } from 'sonner';
-import { downloadDocument } from '@/lib/api/documents';
+import { downloadDocument, deleteDocument } from '@/lib/api/documents';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function DocumentCardList({ documents = [] }) {
   const [loadingId, setLoadingId] = React.useState(null);
   const [previewDoc, setPreviewDoc] = React.useState(null);
 
-
   const handleDownload = async (doc) => {
     try {
       setLoadingId(doc.id);
-      const token = localStorage.getItem('authToken'); // Or use context/auth hook
-      await downloadDocument(doc.id, token);
+      const token = localStorage.getItem('idToken');
+      if (!token) {
+        throw new Error('Session expired. Please login again.');
+      }
+      if (!doc.s3Url) {
+        throw new Error('Document URL not available');
+      }
+
+      const result = await downloadDocument(doc.s3Url, doc.id, token, false);
+      if (result === true) {
+        toast.success('Document downloaded successfully');
+      }
     } catch (error) {
       toast.error(error.message || 'Download failed');
     } finally {
@@ -27,88 +36,74 @@ export default function DocumentCardList({ documents = [] }) {
     }
   };
 
-  // const handlePreview = async (doc) => {
-  //   try {
-  //     setLoadingId(doc.id);
-  //     const token = localStorage.getItem('authToken'); // Or use context/auth hook
-  //     const data = await downloadDocument(doc.id, token, true); // Preview mode
+  const handlePreview = async (doc) => {
+    try {
+      setLoadingId(doc.id);
+      const token = localStorage.getItem('idToken');
+      if (!token) {
+        throw new Error('Session expired. Please login again.');
+      }
+      if (!doc.s3Url) {
+        throw new Error('Document URL not available');
+      }
 
-  //     // Determine how to display the document based on its type
-  //     const fileType = doc.fileName.split('.').pop()?.toLowerCase();
-  //     if (fileType === 'pdf') {
-  //       // Display PDF in an iframe
-  //       setPreviewDoc({
-  //         type: 'pdf',
-  //         data: URL.createObjectURL(new Blob([data], { type: 'application/pdf' })),
-  //       });
-  //     } else if (fileType === 'txt') {
-  //       // Display text content
-  //       const text = new TextDecoder().decode(data);
-  //       setPreviewDoc({
-  //         type: 'text',
-  //         data: text,
-  //       });
-  //     } else if (fileType === 'doc' || fileType === 'docx') {
-  //       // For Word documents, you might need a library like Office.js or fallback to download
-  //       toast.info('Word documents are best viewed after download.');
-  //       await handleDownload(doc);
-  //     } else {
-  //       toast.info('Unsupported file type for preview.');
+      const { data, filename } = await downloadDocument(doc.s3Url, doc.id, token, true);
+      // Convert ArrayBuffer to Blob for rendering
+      const blob = new Blob([data], { type: doc.fileType });
+      const url = URL.createObjectURL(blob);
+      setPreviewDoc({ url, filename, type: doc.fileType });
+      toast.success('Document loaded for preview');
+    } catch (error) {
+      toast.error(error.message || 'Preview failed');
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  // const handleDelete = async (docId) => {
+  //   try {
+  //     setLoadingId(docId);
+  //     const token = localStorage.getItem('idToken');
+  //     if (!token) {
+  //       throw new Error('Session expired. Please login again.');
   //     }
+
+  //     await deleteDocument(docId, token);
+  //     toast.success('Document deleted successfully');
+  //     // Optionally, trigger a refresh of the document list
+  //     // e.g., call a parent-provided onDelete callback
   //   } catch (error) {
-  //     toast.error(error.message || 'Failed to preview document');
+  //     toast.error(error.message || 'Delete failed');
   //   } finally {
   //     setLoadingId(null);
   //   }
   // };
 
-
-  const getFileTypeIcon = (fileName) => {
-    if (!fileName) return null;
-
-    const lowercaseName = fileName.toLowerCase();
-    if (lowercaseName.endsWith('.pdf')) {
-      return <FaFilePdf className="text-red-500 w-8 h-8 mt-1" />;
-    } else if (lowercaseName.endsWith('.doc') || lowercaseName.endsWith('.docx')) {
-      return <FaFileWord className="text-blue-600 w-8 h-8 mt-1" />;
-    } else if (lowercaseName.endsWith('.txt')) {
-      return <BiSolidFileTxt className="text-green-600 w-8 h-8 mt-1" />;
-    } else {
-      return <span className="text-gray-400 w-8 h-8 mt-1">📄</span>;
+  const getFileTypeIcon = (fileType) => {
+    switch (fileType) {
+      case 'application/pdf':
+        return <FaFilePdf className="text-red-500 w-8 h-8 mt-1" />;
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        return <FaFileWord className="text-blue-600 w-8 h-8 mt-1" />;
+      case 'text/plain':
+        return <BiSolidFileTxt className="text-green-600 w-8 h-8 mt-1" />;
+      default:
+        return <span className="text-gray-400 w-8 h-8 mt-1">📄</span>;
     }
   };
 
-
-  const getFileTypeLabel = (fileName) => {
-    if (!fileName) return 'Document';
-
-    const lowercaseName = fileName.toLowerCase();
-    if (lowercaseName.endsWith('.pdf')) {
-      return 'PDF Document';
-    } else if (lowercaseName.endsWith('.doc') || lowercaseName.endsWith('.docx')) {
-      return 'Word Document';
-    } else if (lowercaseName.endsWith('.txt')) {
-      return 'Text File';
-    } else {
-      return 'Document';
+  const getFileTypeLabel = (fileType) => {
+    switch (fileType) {
+      case 'application/pdf':
+        return 'PDF Document';
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        return 'Word Document';
+      case 'text/plain':
+        return 'Text File';
+      default:
+        return 'Document';
     }
   };
-
-
-  // const handlePreview = (doc) => {
-  //   if (doc.s3Url) {
-  //     window.open(doc.s3Url, '_blank');
-  //   } else {
-  //     toast.error('No preview available for this document');
-  //   }
-  // };
-
-  const handleDelete = (docId) => {
-    // TODO: Call delete API here
-    toast.info('Delete functionality coming soon', docId);
-  };
-
-
 
   const SkeletonCard = () => (
     <div className="bg-white p-5 shadow-lg rounded-xl border border-gray-100 animate-pulse">
@@ -145,95 +140,180 @@ export default function DocumentCardList({ documents = [] }) {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {
-          documents.map((doc, index) => (
-            <div
-              key={index}
-              className="bg-white p-5 shadow rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
-            >
-              <div className='flex items-center gap-3'>
-                {getFileTypeIcon(doc.fileName)}
-                <div>
-                  <h3 className="font-bold text-sm md:text-base ">
-                    {doc.fileName || 'Untitled Document'}
-                  </h3>
-                  <p className="text-sm text-slate-500 mt-1">
-                    <span>{getFileTypeLabel(doc.fileName)} - </span>
-                    {formatFileSize(doc.fileSizeBytes)}
-                  </p>
-                </div>
-              </div>
-              {doc.description ? (
-                <p className="text-sm text-slate-700 mt-2 line-clamp-2">
-                  {doc.description}
+        {documents.map((doc) => (
+          <div
+            key={doc.id}
+            className="bg-white p-5 shadow rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center gap-3">
+              {getFileTypeIcon(doc.fileType)}
+              <div>
+                <h3 className="font-bold text-sm md:text-base">{doc.fileName || 'Untitled Document'}</h3>
+                <p className="text-sm text-slate-500 mt-1">
+                  <span>{getFileTypeLabel(doc.fileType)} - </span>
+                  {formatFileSize(doc.fileSizeBytes)}
                 </p>
-              ) :
-                (
-                  <span className="text-sm text-slate-700 mt-2 line-clamp-2">{getFileTypeLabel(doc.fileName)}</span>
-                )}
-              <div className="flex items-start  justify-start gap-5 mt-2">
-                <Link href={`/dashboard/knowledge-base/${doc.id}`}>
-                  <button
-                    aria-label="Preview document"
-                    className="text-blue-600  flex items-center gap-2"
-                  >
-                    <AiOutlineEye size={18} /><span>View</span>
-                  </button>
-                </Link>
-                <button
-                  onClick={() => handleDownload(doc)}
-                  aria-label="Download document"
-                  disabled={loadingId === doc.id}
-                  className={`text-green-600 flex items-center gap-2 ${loadingId === doc.id ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                >
-                  {loadingId === doc.id ? (
-                    <>
-                      <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-white rounded-full"></span>
-                      <span>Downloading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <FaDownload size={18} />
-                      <span>Download</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => handleDelete(doc.id)}
-                  aria-label="Delete document"
-                  className="text-red-600  flex items-center gap-2"
-                >
-                  <AiOutlineDelete size={18} /><span>Delete</span>
-                </button>
               </div>
             </div>
-          ))}
+            {doc.description ? (
+              <p className="text-sm text-slate-700 mt-2 line-clamp-2">{doc.description}</p>
+            ) : (
+              <span className="text-sm text-slate-700 mt-2 line-clamp-2">
+                {getFileTypeLabel(doc.fileType)}
+              </span>
+            )}
+            <div className="flex items-start justify-start gap-5 mt-2">
+              <Link href={`/dashboard/knowledge-base/${doc.id}`}>
+                <button
+                  aria-label="View document"
+                  className="text-blue-600 flex items-center gap-2"
+                >
+                  <AiOutlineEye size={18} />
+                  <span>View</span>
+                </button>
+              </Link>
+              {/* <button
+                onClick={() => handleDownload(doc)}
+                aria-label="Download document"
+                disabled={loadingId === doc.id}
+                className={`text-green-600 flex items-center gap-2 ${
+                  loadingId === doc.id ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {loadingId === doc.id ? (
+                  <>
+                    <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-white rounded-full"></span>
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <FaDownload size={18} />
+                    <span>Download</span>
+                  </>
+                )}
+              </button> */}
+              <button
+                onClick={() => handlePreview(doc)}
+                aria-label="Preview document"
+                disabled={loadingId === doc.id}
+                className={`text-green-600 flex items-center gap-2 ${
+                  loadingId === doc.id ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {loadingId === doc.id ? (
+                  <>
+                    <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-white rounded-full"></span>
+                    <span>Loading...</span>
+                  </>
+                ) : (
+                  <>
+                    <FaDownload size={18} />
+                    <span>Download</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => handleDelete(doc.id)}
+                aria-label="Delete document"
+                disabled={loadingId === doc.id}
+                className={`text-red-600 flex items-center gap-2 ${
+                  loadingId === doc.id ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                <AiOutlineDelete size={18} />
+                <span>Delete</span>
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Modal for previewing documents */}
       {previewDoc && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
+              URL.revokeObjectURL(previewDoc.url);
               setPreviewDoc(null);
             }
           }}
+          role="dialog"
+          aria-labelledby="preview-title"
+          aria-modal="true"
         >
-          <div className="bg-white p-4 rounded-lg max-w-lg max-h-screen overflow-auto">
-            {previewDoc.type === 'pdf' && (
-              <iframe
-                src={previewDoc.data}
-                title="Document Preview"
-                width="100%"
-                height="100%"
-                frameBorder="0"
-              ></iframe>
-            )}
-            {previewDoc.type === 'text' && (
-              <pre className="whitespace-pre-wrap break-all">{previewDoc.data}</pre>
-            )}
+          <div className="bg-white rounded-2xl w-full max-w-[90vw] h-[90vh] flex flex-col shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h2 id="preview-title" className="text-xl font-semibold text-gray-900 truncate max-w-[70%]">
+                {previewDoc.filename}
+              </h2>
+              <Button
+                onClick={() => {
+                  URL.revokeObjectURL(previewDoc.url);
+                  setPreviewDoc(null);
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center"
+                aria-label="Close preview"
+              >
+                &times;
+              </Button>
+            </div>
+            <div className="flex-1 overflow-auto p-6">
+              {previewDoc.type === 'application/pdf' && (
+                <iframe
+                  src={previewDoc.url}
+                  title="Document Preview"
+                  className="w-full h-full border-0"
+                  aria-label="PDF document preview"
+                />
+              )}
+              {previewDoc.type === 'text/plain' && (
+                <pre className="whitespace-pre-wrap break-all p-4 bg-gray-50 rounded-lg text-sm text-gray-800 max-h-full overflow-auto">
+                  {new TextDecoder().decode(new Uint8Array(previewDoc.data))}
+                </pre>
+              )}
+              {previewDoc.type.startsWith('image/') && (
+                <img
+                  src={previewDoc.url}
+                  alt="Image Preview"
+                  className="w-full h-auto max-h-[80vh] object-contain"
+                  aria-label="Image preview"
+                />
+              )}
+              {previewDoc.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' && (
+                <div className="text-center p-6 bg-gray-100 rounded-lg">
+                  <p className="text-gray-600 text-lg">
+                    Word document preview is not supported.
+                  </p>
+                  <Button
+                    onClick={() => handleDownload(documents.find((doc) => doc.fileName === previewDoc.filename))}
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <FaDownload className="mr-2" />
+                    Download to View
+                  </Button>
+                </div>
+              )}
+              {![
+                'application/pdf',
+                'text/plain',
+                'image/png',
+                'image/jpeg',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+              ].includes(previewDoc.type) && (
+                <div className="text-center p-6 bg-gray-100 rounded-lg">
+                  <p className="text-gray-600 text-lg">
+                    Preview not supported for this file type.
+                  </p>
+                  <Button
+                    onClick={() => handleDownload(documents.find((doc) => doc.fileName === previewDoc.filename))}
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <FaDownload className="mr-2" />
+                    Download to View
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

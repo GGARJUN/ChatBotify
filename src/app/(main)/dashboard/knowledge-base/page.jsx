@@ -43,8 +43,6 @@ export default function KnowledgeBasePage() {
 
 
 
-
-
     // Load documents on mount
     useEffect(() => {
         if (!authLoading && user) {

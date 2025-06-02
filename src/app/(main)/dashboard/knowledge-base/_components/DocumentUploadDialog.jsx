@@ -41,6 +41,8 @@ export default function DocumentUploadDialog({ onSuccess }) {
       const uploadResult = await uploadFileToS3(fileData.file, token, clientId);
 
       // Step 2: Create document record
+      console.log("Upload Result",uploadResult);
+      
       toast.info('Creating document record...');
       const documentRecord = {
         clientId,
@@ -51,6 +53,8 @@ export default function DocumentUploadDialog({ onSuccess }) {
       const recordResponse = await createDocumentRecord(documentRecord, token);
 
       toast.success('Document processed successfully!');
+
+      
       if (onSuccess) onSuccess(recordResponse);
       return recordResponse;
     } catch (error) {

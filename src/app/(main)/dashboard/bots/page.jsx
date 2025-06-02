@@ -1,10 +1,9 @@
 'use client';
 
 import { getBots } from '@/lib/api/bots';
-import CreateBot from './_components/CreateBot';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { FaRobot } from 'react-icons/fa6';
+import { FaDownload, FaRobot } from 'react-icons/fa6';
 import { toast } from 'sonner';
 import { FiEye, FiTrash } from 'react-icons/fi';
 import { BiSolidFileTxt } from 'react-icons/bi';
@@ -13,7 +12,7 @@ import { IoMdClose } from 'react-icons/io';
 import DocumentUploadDialog from '../knowledge-base/_components/DocumentUploadDialog';
 import { FaUpload } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
-import { getDocuments } from '@/lib/api/documents';
+import { downloadDocument, getDocuments } from '@/lib/api/documents';
 import Link from 'next/link';
 
 export default function BotsPage() {
@@ -21,6 +20,8 @@ export default function BotsPage() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [loadingId, setLoadingId] = useState(null);
+  const [previewDoc, setPreviewDoc] = useState(null);
 
   const router = useRouter();
   const { user, loading: authLoading, logout } = useAuth();
@@ -41,8 +42,6 @@ export default function BotsPage() {
       });
 
       setBots(sortedBots);
-      console.log(bots);
-
     } catch (error) {
       toast.error('Failed to load bots');
     }
@@ -61,6 +60,60 @@ export default function BotsPage() {
     }
   };
 
+  // Inside BotsPage component
+  const handlePreview = async (doc) => {
+    try {
+      setLoadingId(doc.id);
+      const token = localStorage.getItem('idToken');
+      if (!token) {
+        throw new Error('Session expired. Please login again.');
+      }
+      if (!doc.s3Url) {
+        throw new Error('Document URL not available');
+      }
+
+      // Download the document data
+      const { data, filename } = await downloadDocument(doc.s3Url, doc.id, token, true);
+
+      // Get the file type with fallback
+      const fileType = doc.fileType || 'application/octet-stream';
+
+      let previewUrl = null;
+      let previewData = null;
+
+      // Handle different file types
+      if (fileType.startsWith('image/') || fileType === 'application/pdf') {
+        const blob = new Blob([data], { type: fileType });
+        previewUrl = URL.createObjectURL(blob);
+      } else if (fileType === 'text/plain') {
+        previewData = new TextDecoder().decode(data); // Store text content directly
+      } else {
+        // Unsupported file types will show a fallback UI
+        previewData = null;
+      }
+
+      setPreviewDoc({
+        url: previewUrl,
+        filename: doc.name || filename || 'Unnamed Document',
+        type: fileType,
+        data: previewData, // Store text content or null for unsupported types
+      });
+
+      toast.success('Document loaded for preview');
+    } catch (error) {
+      toast.error(error.message || 'Failed to load document for preview');
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const closePreview = () => {
+    if (previewDoc?.url) {
+      URL.revokeObjectURL(previewDoc.url); // Revoke only if URL exists
+    }
+    setPreviewDoc(null);
+  };
+
   // Load on mount
   useEffect(() => {
     if (!authLoading && user) {
@@ -69,9 +122,18 @@ export default function BotsPage() {
     }
   }, [authLoading, user]);
 
+  // Clean up object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (previewDoc?.url && previewDoc.type && !previewDoc.type.startsWith('text/')) {
+        URL.revokeObjectURL(previewDoc.url);
+      }
+    };
+  }, [previewDoc]);
+
   // Skeleton Loader
   const SkeletonCard = () => (
-    <div className="bg-white p-5 shadow-lg rounded-xl border border-gray-100 animate-pulse">
+    <div className="bg-white p-5 shadow rounded-xl border border-gray-200 animate-pulse">
       <div className="flex items-center gap-4 mb-4">
         <div className="rounded-full w-14 h-14 bg-gray-200"></div>
         <div className="flex-1 min-w-0 space-y-2">
@@ -103,114 +165,193 @@ export default function BotsPage() {
   );
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Upload Documents</h1>
-          <p className="text-gray-500">Upload and manage documents for your bots</p>
+          <p className="text-sm text-gray-500">Upload and manage documents for your bots</p>
         </div>
-        {/* <Button onClick={() => setUploadDialogOpen(true)}>
-          <FaUpload className="mr-2" /> Upload Document
-        </Button> */}
-        <DocumentUploadDialog />
+        <DocumentUploadDialog
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          onSuccess={() => {
+            fetchDocuments();
+            fetchBots();
+          }}
+        />
       </div>
 
-      {/* <DocumentUploadDialog
-        open={uploadDialogOpen}
-        onOpenChange={(open) => {
-          setUploadDialogOpen(open);
-          if (!open) fetchDocuments(); // Refresh after upload
-        }}
-        botId="V11WFMX"
-      /> */}
-
+      {/* Loading State */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(3)].map((_, index) => (
             <SkeletonCard key={`skeleton-${index}`} />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+        <>
+          {/* Bot Cards */}
           {bots.length === 0 ? (
-            <p>No bots found.</p>
+            <div className="text-center py-12">
+              <p className="text-lg text-gray-500">No bots found.</p>
+            </div>
           ) : (
-            bots.map((item, index) => {
-              const bot = item.bot || item;
-              const docs = item.documents || [];
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {bots.map((item, index) => {
+                const bot = item.bot || item;
+                const docs = item.documents || [];
 
-              return (
-                <div
-                  key={bot.id || index}
-                  className="bg-white p-5 shadow-lg rounded-xl border border-gray-100 hover:shadow-xl transition-shadow"
-                >
-                  {/* Bot Header */}
-                  <div className="flex items-center gap-4 mb-4">
-                    <div
-                      className={`rounded-full w-14 h-14 flex justify-center items-center ${bot.status === 'ACTIVE' ? 'bg-blue-200/50 text-blue-500' : 'bg-red-200/50 text-red-500'
-                        }`}
-                    >
-                      <FaRobot className="w-8 h-8" />
+                return (
+                  <div
+                    key={bot.id || index}
+                    className="bg-white p-5 shadow rounded-xl border border-gray-200 hover:shadow-md transition-shadow duration-200"
+                  >
+                    {/* Bot Header */}
+                    <div className="flex items-center gap-4 mb-4">
+                      <div
+                        className={`rounded-full w-14 h-14 flex justify-center items-center ${bot.status === 'ACTIVE' ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'
+                          }`}
+                      >
+                        <FaRobot className="w-8 h-8" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h2 className="font-semibold text-sm md:text-base text-slate-900 truncate">{bot.name}</h2>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {docs.length > 0 && `${docs.length} Document${docs.length > 1 ? 's' : ''} Linked`}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h2 className="font-bold text-sm md:text-base text-slate-900 truncate">{bot.name}</h2>
-                      <p className="text-xs text-gray-400">
-                        {docs.length > 0 && `${docs.length} Document${docs.length > 1 ? 's' : ''} Linked`}
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Document List */}
-                  <div className="mt-4 space-y-4">
-                    {docs.length > 0 ? (
-                      docs.map((doc, docIndex) => (
-                        <div
-                          key={docIndex}
-                          className="bg-slate-100 p-4 rounded-md flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-2">
-                            <BiSolidFileTxt className="text-green-600 w-8 h-8" />
-                            <div>
-                              <span className="text-sm font-medium">{doc.name}</span>
-                              <p className="text-xs text-gray-500 mt-1">
-                                Last updated: {new Date(doc.updatedAt).toLocaleDateString()}
-                              </p>
+                    {/* Document List */}
+                    <div className="mt-4 space-y-3">
+                      {docs.length > 0 ? (
+                        docs.map((doc, docIndex) => (
+                          <div
+                            key={docIndex}
+                            className="bg-slate-50 p-3 rounded-md flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-2">
+                              <BiSolidFileTxt className="text-green-600 w-6 h-6" />
+                              <div>
+                                <span className="text-sm font-medium truncate max-w-[160px] block">
+                                  {doc.name}
+                                </span>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Updated: {new Date(doc.updatedAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                aria-label="Preview document"
+                                className="p-1 border border-gray-300 rounded hover:text-blue-500"
+                                onClick={() => handlePreview(doc)}
+                                disabled={loadingId === doc.id}
+                              >
+                                <FiEye size={14} />
+                              </button>
+                              <button
+                                aria-label="Delete document"
+                                className="p-1 border border-gray-300 rounded hover:text-red-500"
+                              >
+                                <IoMdClose size={16} />
+                              </button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              aria-label="View document"
-                              className="bg-white p-[2px] border border-slate-300 rounded-sm hover:text-blue-500"
-                            >
-                              <FiEye size={16} />
-                            </button>
-                            <button
-                              aria-label="Delete document"
-                              className="bg-white p-[2px] border border-slate-300 rounded-sm hover:text-red-500"
-                            >
-                              <IoMdClose size={18} />
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-xs text-gray-400 italic">No documents available</p>
-                    )}
-                  </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-gray-400 italic">No documents linked yet</p>
+                      )}
+                    </div>
 
-                  {/* Manage Documents Button - Only shown once per bot */}
-                  <div className="mt-4">
-                    <Link href={`/dashboard/bots/${bot.id}`} passHref>
-                      <Button className="w-full">Manage Documents</Button>
-                    </Link>
+                    {/* Manage Documents Button */}
+                    <div className="mt-4">
+                      <Link href={`/dashboard/bots/${bot.id}`}>
+                        <Button className="w-full py-2 text-sm">Manage Documents</Button>
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
+        </>
+      )}
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+          onClick={closePreview}
+          role="dialog"
+          aria-labelledby="preview-title"
+          aria-modal="true"
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-[90vw] h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+          >
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h2 id="preview-title" className="text-xl font-semibold text-gray-900 truncate max-w-[70%]">
+                {previewDoc.filename}
+              </h2>
+              <button
+                onClick={closePreview}
+                className="text-gray-500 hover:text-gray-700 rounded-full w-10 h-10 flex items-center justify-center"
+                aria-label="Close document preview"
+              >
+                <IoMdClose size={24} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-6">
+              {previewDoc.type === 'application/pdf' && previewDoc.url && (
+                <iframe
+                  src={`${previewDoc.url}#toolbar=0`} // Disable PDF toolbar for cleaner look
+                  title={`Preview of ${previewDoc.filename}`}
+                  className="w-full h-full border-0"
+                  aria-label={`PDF preview of ${previewDoc.filename}`}
+                />
+              )}
+              {previewDoc.type === 'text/plain' && previewDoc.data && (
+                <pre
+                  className="whitespace-pre-wrap break-words p-4 bg-gray-50 rounded-lg text-sm text-gray-800 max-h-full overflow-auto"
+                  aria-label={`Text preview of ${previewDoc.filename}`}
+                >
+                  {previewDoc.data}
+                </pre>
+              )}
+              {previewDoc.type?.startsWith('image/') && previewDoc.url && (
+                <div className="flex items-center justify-center h-full">
+                  <img
+                    src={previewDoc.url}
+                    alt={`Preview of ${previewDoc.filename}`}
+                    className="max-w-full max-h-full object-contain"
+                    aria-label={`Image preview of ${previewDoc.filename}`}
+                  />
+                </div>
+              )}
+              {(!previewDoc.url && !previewDoc.data) && (
+                <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                  <BiSolidFileTxt className="text-gray-400 w-16 h-16 mb-4" />
+                  <p className="text-gray-600 text-lg mb-4">
+                    Preview not available for this file type
+                  </p>
+                  <Button
+                    onClick={() => handleDownload(documents.find((d) => d.name === previewDoc.filename))}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={loadingId !== null}
+                    aria-label={`Download ${previewDoc.filename}`}
+                  >
+                    <FaDownload className="mr-2" />
+                    Download File
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      )
-      }
-    </div >
+      )}
+    </div>
   );
 }

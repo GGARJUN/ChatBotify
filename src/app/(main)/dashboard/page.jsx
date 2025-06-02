@@ -149,7 +149,7 @@
 "use client";
 
 import { useAuth } from '@/context/AuthContext';
-import BotList from './bots/_components/BotList';
+import BotList from './_component/BotList';
 import CreateBot from './bots/_components/CreateBot';
 
 export default function DashBoard() {

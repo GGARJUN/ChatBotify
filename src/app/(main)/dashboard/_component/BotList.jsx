@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import BotTable from './BotTable';
+import BotTable from '../bots/_components/BotTable';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { getBots } from '@/lib/api/bots';
