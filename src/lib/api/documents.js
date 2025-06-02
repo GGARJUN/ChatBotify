@@ -42,11 +42,11 @@ export const uploadFileToS3 = async (file, token, clientId) => {
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
     const response = await fetch(url, {
-      method: 'PUT',
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': FILE_TYPE_HEADERS[file.type],
-        'x-amz-meta-originalname': file.name,
+        // 'x-amz-meta-originalname': file.name,
       },
       body: file,
       signal: controller.signal,
