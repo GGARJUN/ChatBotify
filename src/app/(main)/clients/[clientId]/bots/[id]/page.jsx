@@ -19,8 +19,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import Link from 'next/link';
-import { IoArrowBack } from 'react-icons/io5';
 
 export default function BotDetailPage() {
   const router = useRouter();
@@ -75,6 +73,8 @@ export default function BotDetailPage() {
   useEffect(() => {
     fetchDocuments();
     fetchBotDetails();
+    console.log('botid',botId);
+    
   }, [botId, user]);
 
   const getFileTypeIcon = (fileType) => {
@@ -203,16 +203,6 @@ export default function BotDetailPage() {
 
   return (
     <div className="p-6">
-      <Link href="/dashboard/bots">
-          <Button
-            variant="ghost"
-            className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 mb-4"
-            aria-label="Go back to knowledge base"
-          >
-            <IoArrowBack size={20} className="mr-2" />
-            Back to Bot Page
-          </Button>
-        </Link>
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-3xl font-bold text-gray-900">{bot.name}</h1>

@@ -160,11 +160,12 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getDocuments } from '@/lib/api/documents';
-import DocumentUploadDialog from './_components/DocumentUploadDialog';
-import DocumentCardList from './_components/DocumentCardList';
-import { toast } from 'sonner';
 
-export default function KnowledgeBasePage() {
+import { toast } from 'sonner';
+import DocumentUploadDialog from '@/app/(main)/dashboard/knowledge-base/_components/DocumentUploadDialog';
+import DocumentCardList from '@/app/(main)/dashboard/knowledge-base/_components/DocumentCardList';
+
+export default function DocumentPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [documents, setDocuments] = useState([]);

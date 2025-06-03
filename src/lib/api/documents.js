@@ -132,6 +132,157 @@ export const createDocumentRecord = async (documentRecord, token) => {
 
 
 // Fetch all documents
+
+// export const getDocuments = async (token, clientId) => {
+//   try {
+//     if (!token) throw new Error('Authentication token is missing');
+//     // if (!clientId) throw new Error('Client ID is missing');
+
+//     console.log('Fetching documents with:', {  token: token.substring(0, 10) + '...' });
+
+//     const response = await axios.get(`${API_BASE_URL}/rc/docs/`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         'Content-Type': 'application/json',
+//       },
+//       params: { clientId },
+//       timeout: 10000,
+//     });
+
+//     console.log('API Response:', {
+//       data: response.data,
+//       status: response.status,
+//       headers: response.headers,
+//     });
+
+//     const documents = response.data || [];
+//     // const mismatchedDocs = documents.filter(doc => doc.clientId !== clientId);
+//     // if (mismatchedDocs.length > 0) {
+//     //   console.warn('Mismatched documents found:', {
+//     //     expectedClientId: clientId,
+//     //     mismatchedDocs,
+//     //   });
+//     //   return documents.filter(doc => doc.clientId === clientId);
+//     // }
+
+//     return documents;
+//   } catch (error) {
+//     let message = 'Failed to fetch documents';
+
+//     if (error.response) {
+//       console.error('API Error Response:', {
+//         status: error.response.status,
+//         data: error.response.data,
+//         headers: error.response.headers,
+//       });
+
+//       switch (error.response.status) {
+//         case 401:
+//           message = 'Unauthorized: Invalid or expired token. Please log in again.';
+//           break;
+//         case 403:
+//           message = 'Forbidden: You do not have permission to access these documents.';
+//           break;
+//         case 500:
+//           message = 'Server error: Please try again later.';
+//           break;
+//         default:
+//           message = error.response.data?.message || message;
+//       }
+//     } else if (error.request) {
+//       console.error('Network Error:', error.request);
+//       message = 'Network error: Unable to reach the server. Please check your connection.';
+//     } else {
+//       console.error('Error:', error.message);
+//       message = error.message;
+//     }
+
+//     throw new Error(message);
+//   }
+// };
+
+
+// export const getDocuments = async (token, clientId) => {
+//   try {
+//     // Validate token
+//     if (!token) {
+//       throw new Error('Authentication token is missing');
+//     }
+
+//     // Validate clientId
+//     if (!clientId) {
+//       throw new Error('Client ID is missing');
+//     }
+
+//     // Log request details for debugging
+//     console.log('Fetching documents with:', { clientId, token: token.substring(0, 10) + '...' });
+
+//     const response = await axios.get(`${API_BASE_URL}/rc/docs/`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         'Content-Type': 'application/json',
+//       },
+//       params: { clientId }, // Pass clientId as query parameter
+//       timeout: 10000, // Set a timeout of 10 seconds
+//     });
+
+//     // Log full response for debugging
+//     console.log('API Response:', {
+//       data: response.data,
+//       status: response.status,
+//       headers: response.headers,
+//     });
+
+//     // Validate that returned documents match the requested clientId
+//     const documents = response.data || [];
+//     const mismatchedDocs = documents.filter(doc => doc.clientId !== clientId);
+//     if (mismatchedDocs.length > 0) {
+//       console.warn('Documents returned with mismatched clientId:', {
+//         expectedClientId: clientId,
+//         mismatchedDocs,
+//       });
+//       // Optionally, filter documents to only include those matching clientId
+//       return documents.filter(doc => doc.clientId === clientId);
+//     }
+
+//     return documents;
+//   } catch (error) {
+//     // Enhanced error handling
+//     let message = 'Failed to fetch documents';
+
+//     if (error.response) {
+//       console.error('API Error Response:', {
+//         status: error.response.status,
+//         data: error.response.data,
+//         headers: error.response.headers,
+//       });
+
+//       if (error.response.status === 401) {
+//         message = 'Unauthorized: Invalid or expired token. Please log in again.';
+//       } else if (error.response.status === 403) {
+//         message = 'Forbidden: You do not have permission to access these documents.';
+//       } else if (error.response.status >= 500) {
+//         message = 'Server error: Please try again later.';
+//       } else {
+//         message = error.response.data?.message || message;
+//       }
+//     } else if (error.request) {
+//       console.error('Network Error:', error.request);
+//       message = 'Network error: Unable to reach the server. Please check your connection.';
+//     } else {
+//       console.error('Error:', error.message);
+//       message = error.message;
+//     }
+
+//     toast.error(message);
+//     throw new Error(message);
+//   }
+// };
+
+
+
+
+// Fetch all documents
 export const getDocuments = async (token) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/rc/docs/`, {

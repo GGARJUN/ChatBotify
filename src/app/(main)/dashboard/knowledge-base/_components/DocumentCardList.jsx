@@ -9,10 +9,13 @@ import { toast } from 'sonner';
 import { downloadDocument, deleteDocument } from '@/lib/api/documents';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 export default function DocumentCardList({ documents = [] }) {
   const [loadingId, setLoadingId] = React.useState(null);
   const [previewDoc, setPreviewDoc] = React.useState(null);
+    const { user } = useAuth();
+  
 
   const handleDownload = async (doc) => {
     try {
@@ -60,24 +63,6 @@ export default function DocumentCardList({ documents = [] }) {
     }
   };
 
-  // const handleDelete = async (docId) => {
-  //   try {
-  //     setLoadingId(docId);
-  //     const token = localStorage.getItem('idToken');
-  //     if (!token) {
-  //       throw new Error('Session expired. Please login again.');
-  //     }
-
-  //     await deleteDocument(docId, token);
-  //     toast.success('Document deleted successfully');
-  //     // Optionally, trigger a refresh of the document list
-  //     // e.g., call a parent-provided onDelete callback
-  //   } catch (error) {
-  //     toast.error(error.message || 'Delete failed');
-  //   } finally {
-  //     setLoadingId(null);
-  //   }
-  // };
 
   const getFileTypeIcon = (fileType) => {
     switch (fileType) {
@@ -163,7 +148,7 @@ export default function DocumentCardList({ documents = [] }) {
               </span>
             )}
             <div className="flex items-start justify-start gap-5 mt-2">
-              <Link href={`/dashboard/knowledge-base/${doc.id}`}>
+              <Link href={`/clients/${user.clientId}/docs/${doc.id}`}>
                 <button
                   aria-label="View document"
                   className="text-blue-600 flex items-center gap-2"
@@ -172,26 +157,6 @@ export default function DocumentCardList({ documents = [] }) {
                   <span>View</span>
                 </button>
               </Link>
-              {/* <button
-                onClick={() => handleDownload(doc)}
-                aria-label="Download document"
-                disabled={loadingId === doc.id}
-                className={`text-green-600 flex items-center gap-2 ${
-                  loadingId === doc.id ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                {loadingId === doc.id ? (
-                  <>
-                    <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-white rounded-full"></span>
-                    <span>Downloading...</span>
-                  </>
-                ) : (
-                  <>
-                    <FaDownload size={18} />
-                    <span>Download</span>
-                  </>
-                )}
-              </button> */}
               <button
                 onClick={() => handlePreview(doc)}
                 aria-label="Preview document"

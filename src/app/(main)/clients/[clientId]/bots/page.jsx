@@ -13,8 +13,7 @@ import { IoMdClose } from 'react-icons/io';
 import { useRouter } from 'next/navigation';
 import { downloadDocument, getDocuments } from '@/lib/api/documents';
 import Link from 'next/link';
-import DocumentUploadDialog from '../knowledge-base/_components/DocumentUploadDialog';
-
+import DocumentUploadDialog from '@/app/(main)/dashboard/knowledge-base/_components/DocumentUploadDialog';
 
 export default function BotsPage() {
   const [bots, setBots] = useState([]);
@@ -31,7 +30,7 @@ export default function BotsPage() {
   const fetchBots = async () => {
     try {
       const token = localStorage.getItem('idToken');
-      // if (!token || !user) return logout();
+      if (!token || !user) return logout();
 
       const response = await getBots(token);
       const fetchedBots = Array.isArray(response) ? response : [];
@@ -52,7 +51,7 @@ export default function BotsPage() {
   const fetchDocuments = async () => {
     try {
       const token = localStorage.getItem('idToken');
-      // if (!token) return router.push('/auth/login');
+      if (!token) return router.push('/auth/login');
 
       const data = await getDocuments(token);
       setDocuments(data || []);

@@ -19,15 +19,17 @@ export default function DocumentUploadDialog({ onSuccess }) {
     setLoading(true);
     try {
       const token = localStorage.getItem('idToken');
-      const clientId = user?.clientId || localStorage.getItem('clientId');
+      const clientId = user.clientId 
   
-      if (!token) {
-        toast.error('Session expired. Please login again.');
-        router.push('/auth/login');
-        return;
-      }
+      // if (!token) {
+      //   toast.error('Session expired. Please login again.');
+      //   router.push('/auth/login');
+      //   return;
+      // }
   
       if (!clientId) {
+        console.log("error");
+        
         toast.error('Client ID not found. Please log in again.');
         return;
       }

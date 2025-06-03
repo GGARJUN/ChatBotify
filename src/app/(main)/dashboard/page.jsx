@@ -154,6 +154,8 @@ import CreateBot from './bots/_components/CreateBot';
 
 export default function DashBoard() {
   const { user } = useAuth();
+  console.log(user);
+  
 
 
   return (

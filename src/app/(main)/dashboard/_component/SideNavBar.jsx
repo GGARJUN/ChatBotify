@@ -26,30 +26,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-// Navigation links configuration
-const navLinks = [
-  {
-    name: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    name: 'Bots',
-    href: '/dashboard/bots',
-    icon: Bot,
-  },
-  {
-    name: 'Knowledge Base',
-    href: '/dashboard/knowledge-base',
-    icon: BookOpenText,
-  },
-  {
-    name: 'Profile',
-    href: '/dashboard/profile',
-    icon: UserRound,
-  },
-];
-
 export default function SideNavBar() {
   const router = useRouter();
   const { user, logout, loading: authLoading } = useAuth();
@@ -63,6 +39,30 @@ export default function SideNavBar() {
       router.push('/auth/login');
     }
   }, [authLoading, user, router]);
+
+  // Navigation links configuration
+  const navLinks = [
+    {
+      name: 'Dashboard',
+      href: '/dashboard',
+      icon: LayoutDashboard,
+    },
+    {
+      name: 'Bots',
+      href: user?.clientId ? `/clients/${user.clientId}/bots` : '#',
+      icon: Bot,
+    },
+    {
+      name: 'Knowledge Base',
+      href: user?.clientId ? `/clients/${user.clientId}/docs` : '#',
+      icon: BookOpenText,
+    },
+    {
+      name: 'Profile',
+      href: '/dashboard/profile',
+      icon: UserRound,
+    },
+  ];
 
   const handleLogout = async () => {
     if (loader) return;
@@ -85,6 +85,18 @@ export default function SideNavBar() {
       setLogoutConfirmOpen(false);
     }
   };
+
+  // Show nothing while checking auth status
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
+      </div>
+    );
+  }
+
+  // Don't render sidebar until user is confirmed
+  if (!user) return null;
 
   return (
     <div className="bg-white/80 backdrop-blur-lg my-3 ml-3 rounded-2xl shadow-2xl px-3 py-2 h-[calc(100vh-1.5rem)] flex flex-col justify-between transition-all duration-300">
@@ -118,6 +130,13 @@ export default function SideNavBar() {
                       ? 'bg-[#5f27cd] text-white'
                       : 'hover:bg-[#5f27cd] hover:text-white text-gray-700'
                   }`}
+                  onClick={(e) => {
+                    // Prevent navigation if clientId is missing
+                    if (link.name === 'Bots' && !user.clientId) {
+                      e.preventDefault();
+                      toast.warning('Client ID not available. Please contact support.');
+                    }
+                  }}
                 >
                   <Icon
                     className={`w-5 h-5 ${
