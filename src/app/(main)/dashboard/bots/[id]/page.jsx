@@ -11,6 +11,14 @@ import { getSingleBot } from '@/lib/api/bots';
 import { getDocuments, grantDocumentAccess, revokeDocumentAccess } from '@/lib/api/documents';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 export default function BotDetailPage() {
   const router = useRouter();
@@ -19,6 +27,10 @@ export default function BotDetailPage() {
   const { user } = useAuth();
   const [allDocuments, setAllDocuments] = useState([]);
   const [isProcessing, setIsProcessing] = useState(null);
+  const [showLinkConfirm, setShowLinkConfirm] = useState(false);
+  const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false);
+  const [selectedDocId, setSelectedDocId] = useState(null);
+  const [selectedAccessId, setSelectedAccessId] = useState(null);
 
   const fetchBotDetails = async () => {
     try {
@@ -30,6 +42,7 @@ export default function BotDetailPage() {
       }
 
       const data = await getSingleBot(botId, token, true);
+      console.log('Bot with Doc Data',data);
       setBotData(data);
     } catch (error) {
       console.error('Error fetching bot:', error);
@@ -49,6 +62,8 @@ export default function BotDetailPage() {
 
       const data = await getDocuments(token);
       setAllDocuments(data || []);
+      console.log('doc Data',data);
+      
     } catch (error) {
       console.error('Failed to fetch documents:', error);
       toast.error('Failed to load documents. Please try again.', { duration: 3000 });
@@ -86,9 +101,14 @@ export default function BotDetailPage() {
     }
   };
 
-  const handleLink = async (documentId) => {
-    if (isProcessing) return;
-    setIsProcessing(documentId);
+  const handleLink = (documentId) => {
+    setSelectedDocId(documentId);
+    setShowLinkConfirm(true);
+  };
+
+  const confirmLink = async () => {
+    if (!selectedDocId || isProcessing) return;
+    setIsProcessing(selectedDocId);
 
     try {
       const token = localStorage.getItem('idToken');
@@ -100,11 +120,10 @@ export default function BotDetailPage() {
 
       await grantDocumentAccess(
         botId,
-        documentId,
+        selectedDocId,
         user?.clientId || localStorage.getItem('clientId'),
         token
       );
-
       toast.success('Document linked successfully', { duration: 2000 });
       await Promise.all([fetchBotDetails(), fetchDocuments()]);
     } catch (error) {
@@ -112,12 +131,19 @@ export default function BotDetailPage() {
       toast.error(error.message || 'Failed to link document', { duration: 3000 });
     } finally {
       setIsProcessing(null);
+      setShowLinkConfirm(false);
+      setSelectedDocId(null);
     }
   };
 
-  const handleUnlink = async (accessId) => {
-    if (isProcessing) return;
-    setIsProcessing(accessId);
+  const handleUnlink = (accessId) => {
+    setSelectedAccessId(accessId);
+    setShowUnlinkConfirm(true);
+  };
+
+  const confirmUnlink = async () => {
+    if (!selectedAccessId || isProcessing) return;
+    setIsProcessing(selectedAccessId);
 
     try {
       const token = localStorage.getItem('idToken');
@@ -127,8 +153,7 @@ export default function BotDetailPage() {
         return;
       }
 
-      await revokeDocumentAccess(accessId, token);
-
+      await revokeDocumentAccess(selectedAccessId, token);
       toast.success('Document unlinked successfully', { duration: 2000 });
       await Promise.all([fetchBotDetails(), fetchDocuments()]);
     } catch (error) {
@@ -136,6 +161,8 @@ export default function BotDetailPage() {
       toast.error(error.message || 'Failed to unlink document', { duration: 3000 });
     } finally {
       setIsProcessing(null);
+      setShowUnlinkConfirm(false);
+      setSelectedAccessId(null);
     }
   };
 
@@ -215,22 +242,12 @@ export default function BotDetailPage() {
                     size="sm"
                     onClick={() => handleUnlink(doc.accessId)}
                     disabled={isProcessing === doc.accessId}
-                    className={`text-red-600 hover:text-red-800 hover:bg-red-50 cursor-pointer ${
-                      isProcessing === doc.accessId ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className={`text-red-600 hover:text-red-800 hover:bg-red-50 cursor-pointer ${isProcessing === doc.accessId ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                     aria-label={`Unlink ${doc.fileName || 'document'}`}
                   >
-                    {isProcessing === doc.accessId ? (
-                      <>
-                        <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-red-600 rounded-full mr-1"></span>
-                        Unlinking
-                      </>
-                    ) : (
-                      <>
                         <FiTrash size={16} className="mr-1" />
                         Unlink
-                      </>
-                    )}
                   </Button>
                 </li>
               ))}
@@ -268,22 +285,12 @@ export default function BotDetailPage() {
                     size="sm"
                     onClick={() => handleLink(doc.id)}
                     disabled={isProcessing === doc.id}
-                    className={`text-blue-600 hover:text-blue-800 hover:bg-blue-50 cursor-pointer${
-                      isProcessing === doc.id ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className={`text-blue-600 hover:text-blue-800 hover:bg-blue-50 cursor-pointer${isProcessing === doc.id ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                     aria-label={`Link ${doc.fileName || 'document'}`}
                   >
-                    {isProcessing === doc.id ? (
-                      <>
-                        <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-blue-600 rounded-full mr-1"></span>
-                        Linking
-                      </>
-                    ) : (
-                      <>
                         <FiLink size={16} className="mr-1" />
                         Link
-                      </>
-                    )}
                   </Button>
                 </li>
               ))}
@@ -295,6 +302,60 @@ export default function BotDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Link Confirmation Dialog */}
+      <Dialog open={showLinkConfirm} onOpenChange={setShowLinkConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Link Document</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to link this document to the bot? This will allow the bot to access it.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLinkConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmLink}
+              disabled={isProcessing}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isProcessing && (
+                <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-white rounded-full mr-2"></span>
+              )}
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unlink Confirmation Dialog */}
+      <Dialog open={showUnlinkConfirm} onOpenChange={setShowUnlinkConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Unlink Document</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this document from the bot? This will revoke its access.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUnlinkConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmUnlink}
+              disabled={isProcessing}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isProcessing && (
+                <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-white rounded-full mr-2"></span>
+              )}
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -78,7 +78,7 @@ export default function DocumentForm({ onSubmit, clientId }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-4 items-center gap-4">
+      {/* <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="clientId" className="text-right">Client ID</Label>
         <Input
           id="clientId"
@@ -87,7 +87,7 @@ export default function DocumentForm({ onSubmit, clientId }) {
           disabled
           className="col-span-3 bg-gray-100 cursor-not-allowed"
         />
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="description" className="text-right">Description</Label>
