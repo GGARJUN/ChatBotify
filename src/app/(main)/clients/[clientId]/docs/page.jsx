@@ -99,19 +99,16 @@ export default function Documents() {
             </div>
           </div>
         ) : documents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-lg">
+
+          <div className="flex flex-col items-center justify-center py-12">
             <div className="text-center max-w-md">
-              <FaFileAlt className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-lg font-medium text-gray-900">No documents found</h3>
+              <div className="mx-auto h-20 w-20 bg-gray-200 rounded-full flex items-center justify-center">
+                <FaFileAlt className="text-gray-700 h-10 w-10" />
+              </div>
+              <h3 className="mt-2 text-lg font-medium text-gray-900">No Documents Found!</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Get started by uploading your first document
+                Get started by Upload your first document.
               </p>
-              <DocumentUploadDialog onSuccess={handleUploadSuccess}>
-                <Button className="mt-4 gap-2">
-                  <FaUpload className="h-4 w-4" />
-                  Upload Document
-                </Button>
-              </DocumentUploadDialog>
             </div>
           </div>
         ) : (
