@@ -1,19 +1,14 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
-
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import SideNavBar from './dashboard/_component/SideNavBar';
+import SideNavBar from '@/components/dashboardComponents/SideNavBar';
 
 function DashboardLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user, loading: authLoading ,logout} = useAuth();
   const router = useRouter();
-
-
-
-  
 
     useEffect(() => {
       if (!authLoading && !user ) {
@@ -76,5 +71,3 @@ function DashboardLayout({ children }) {
 }
 
 export default DashboardLayout;
-
-//h-[calc(100vh-1.5rem)]

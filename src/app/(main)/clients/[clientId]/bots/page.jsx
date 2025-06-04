@@ -9,17 +9,15 @@ import { FiEye } from 'react-icons/fi';
 import { BiSolidFileTxt } from 'react-icons/bi';
 import { Button } from '@/components/ui/button';
 import { IoMdClose } from 'react-icons/io';
-
 import { useRouter } from 'next/navigation';
 import { downloadDocument, getDocuments } from '@/lib/api/documents';
 import Link from 'next/link';
-import DocumentUploadDialog from '@/app/(main)/dashboard/knowledge-base/_components/DocumentUploadDialog';
+import CreateBot from '@/components/botComponents/CreateBot';
 
 export default function BotsPage() {
   const [bots, setBots] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [loadingId, setLoadingId] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null);
 
@@ -169,17 +167,10 @@ export default function BotsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Upload Documents</h1>
-          <p className="text-sm text-gray-500">Upload and manage documents for your bots</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Your Chatbots</h1>
+          <p className="text-sm text-gray-500">Create bot and manage documents for your bots</p>
         </div>
-        <DocumentUploadDialog
-          open={uploadDialogOpen}
-          onOpenChange={setUploadDialogOpen}
-          onSuccess={() => {
-            fetchDocuments();
-            fetchBots();
-          }}
-        />
+        <CreateBot />
       </div>
 
       {/* Loading State */}
@@ -193,8 +184,16 @@ export default function BotsPage() {
         <>
           {/* Bot Cards */}
           {bots.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-lg text-gray-500">No bots found.</p>
+            <div className="flex flex-col items-center justify-center py-12">
+                <div className="text-center max-w-md">
+                    <div className="mx-auto h-20 w-20 bg-gray-200 rounded-full flex items-center justify-center">
+                        <FaRobot className="text-gray-700 h-10 w-10" />
+                    </div>
+                    <h3 className="mt-2 text-lg font-medium text-gray-900">No bots created</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Get started by creating your first bot.
+                    </p>
+                </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -260,7 +259,7 @@ export default function BotsPage() {
                             </div>
                           </div>
                         ))
-}
+                      }
                     </div>
 
                     {/* Manage Documents Button */}

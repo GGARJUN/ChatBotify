@@ -1,198 +1,38 @@
-// // app/knowledge-base/KnowledgeBasePage.tsx
-// 'use client';
-
-// import { useAuth } from '@/context/AuthContext';
-// import { getDocuments } from '@/lib/api/documents';
-// import { useRouter } from 'next/navigation';
-// import React, { useEffect, useState } from 'react';
-// import DocumentUploadDialog from './_components/DocumentUploadDialog';
-// import DocumentCardList from './_components/DocumentCardList';
-// import { toast } from 'sonner';
-
-// export default function KnowledgeBasePage() {
-//   const router = useRouter();
-//   const { user, loading: authLoading } = useAuth();
-//   const [documents, setDocuments] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   // Fetch documents from API
-//   const fetchDocuments = async () => {
-//     setLoading(true);
-//     try {
-//       const token = localStorage.getItem('idToken');
-//       if (!token) {
-//         router.push('/auth/login');
-//         return;
-//       }
-
-//       const data = await getDocuments(token);
-//       setDocuments(data || []);
-//     } catch (error) {
-//       console.error('Failed to fetch documents:', error);
-//       toast.error('Failed to load documents. Please try again.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // Load documents on mount
-//   useEffect(() => {
-//     if (!authLoading && user) {
-//       fetchDocuments();
-//     }
-//   }, [authLoading, user]);
-
-//   // Handle upload success — either append or refetch
-//   const handleUploadSuccess = (newDocument) => {
-//     // Option 1: Append new document to existing list for instant UI update
-//     setDocuments((prev) => [...prev, newDocument]);
-//     toast.success('New document uploaded successfully!');
-//   };
-
-//   return (
-//     <div className="container mx-auto px-4 py-8">
-//       <div className="flex justify-between items-center mb-8">
-//         <div>
-//           <h1 className="text-2xl font-bold text-gray-900">Knowledge Base</h1>
-//           <p className="text-gray-500">Upload and manage documents for your bots</p>
-//         </div>
-//         <DocumentUploadDialog onSuccess={handleUploadSuccess} />
-//       </div>
-
-//       <div className="mt-8">
-//         <h2 className="text-lg font-semibold text-gray-700 mb-4">Your Documents</h2>
-//         <DocumentCardList documents={documents} loading={loading} />
-//       </div>
-//     </div>
-//   );
-// }
-
-
-// 'use client';
-
-// import { useAuth } from '@/context/AuthContext';
-// import { getDocuments } from '@/lib/api/documents';
-// import { useRouter } from 'next/navigation';
-// import React, { useEffect, useState } from 'react';
-// import DocumentUploadDialog from './_components/DocumentUploadDialog';
-// import DocumentCardList from './_components/DocumentCardList';
-// import { toast } from 'sonner';
-
-// export default function KnowledgeBasePage() {
-//   const router = useRouter();
-//   const { user, loading: authLoading } = useAuth();
-//   const [documents, setDocuments] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   // Fetch documents from API
-//   const fetchDocuments = async () => {
-//     setLoading(true);
-//     try {
-//       const token = localStorage.getItem('idToken');
-//       const clientId = user?.clientId;
-
-//       if (!token || !clientId) {
-//         toast.error('Authentication required. Please log in again.');
-//         router.push('/auth/login');
-//         return;
-//       }
-
-//       // Log auth details for debugging
-//       console.log('Auth Context:', { user, clientId, token: token.substring(0, 10) + '...' });
-
-//       const data = await getDocuments(token, clientId);
-//       setDocuments(data || []);
-//       if (data.length === 0) {
-//         toast.info('No documents found for this client ID.');
-//       }
-//     } catch (error) {
-//       console.error('Failed to fetch documents:', error);
-//       toast.error(error.message || 'Failed to load documents. Please try again.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // Load documents on mount
-//   useEffect(() => {
-//     if (!authLoading && user) {
-//       fetchDocuments();
-//     } else if (!authLoading && !user) {
-//       toast.error('Please log in to view documents.');
-//       router.push('/auth/login');
-//     }
-//   }, [authLoading, user]);
-
-//   // Handle upload success — refetch documents
-//   const handleUploadSuccess = () => {
-//     toast.success('New document uploaded successfully!');
-//     fetchDocuments(); // Refetch to ensure consistency
-//   };
-
-//   return (
-//     <div className="container mx-auto px-4 py-8">
-//       <div className="flex justify-between items-center mb-8">
-//         <div>
-//           <h1 className="text-2xl font-bold text-gray-900">Knowledge Base</h1>
-//           <p className="text-gray-500">Upload and manage documents for your bots</p>
-//         </div>
-//         <DocumentUploadDialog onSuccess={handleUploadSuccess} />
-//       </div>
-
-//       <div className="mt-8">
-//         <h2 className="text-lg font-semibold text-gray-700 mb-4">Your Documents</h2>
-//         {loading ? (
-//           <p>Loading documents...</p>
-//         ) : documents.length === 0 ? (
-//           <p className="text-gray-500">No documents available for Client ID: {user?.clientId}. Upload a document to get started.</p>
-//         ) : (
-//           <DocumentCardList documents={documents} loading={loading} />
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import DocumentCardList from '@/components/documentComponents/DocumentCardList';
+import DocumentUploadDialog from '@/components/documentComponents/DocumentUploadDialog';
 import { useAuth } from '@/context/AuthContext';
 import { getDocuments } from '@/lib/api/documents';
-
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { FaFileAlt, FaUpload } from 'react-icons/fa';
 import { toast } from 'sonner';
-import DocumentUploadDialog from '@/app/(main)/dashboard/knowledge-base/_components/DocumentUploadDialog';
-import DocumentCardList from '@/app/(main)/dashboard/knowledge-base/_components/DocumentCardList';
+import { Button } from '@/components/ui/button';
 
-export default function DocumentPage() {
+export default function Documents() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchDocuments = async () => {
     setLoading(true);
+    setError(null);
     try {
       const token = localStorage.getItem('idToken');
-      const clientId = user?.clientId;
-
-      if (!token || !clientId) {
-        toast.error('Authentication required. Please log in again.');
+      if (!token) {
         router.push('/auth/login');
         return;
       }
 
-      console.log('Auth Context:', { user, clientId, token: token.substring(0, 10) + '...' });
-
       const data = await getDocuments(token);
       setDocuments(data || []);
-      if (data.length === 0) {
-        toast.info('No documents found for this client ID.');
-      }
     } catch (error) {
       console.error('Failed to fetch documents:', error);
-      toast.error(error.message || 'Failed to load documents. Please try again.');
+      setError('Failed to load documents. Please try again.');
+      toast.error('Failed to load documents. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -201,37 +41,88 @@ export default function DocumentPage() {
   useEffect(() => {
     if (!authLoading && user) {
       fetchDocuments();
-    } else if (!authLoading && !user) {
-      toast.error('Please log in to view documents.');
-      router.push('/auth/login');
     }
   }, [authLoading, user]);
 
-  const handleUploadSuccess = () => {
-    toast.success('New document uploaded successfully!');
+  const handleUploadSuccess = (newDocument) => {
+    setDocuments((prev) => [newDocument, ...prev]);
+    toast.success('Document uploaded successfully!');
+  };
+
+  const handleRetry = () => {
     fetchDocuments();
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Knowledge Base</h1>
           <p className="text-gray-500">Upload and manage documents for your bots</p>
         </div>
-        <DocumentUploadDialog onSuccess={handleUploadSuccess} />
+        <DocumentUploadDialog onSuccess={handleUploadSuccess}>
+          <Button className="gap-2">
+            <FaUpload className="h-4 w-4" />
+            Upload Document
+          </Button>
+        </DocumentUploadDialog>
       </div>
 
       <div className="mt-8">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Your Documents</h2>
         {loading ? (
-          <p>Loading documents...</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, index) => (
+              <div key={`skeleton-${index}`} className="bg-white p-5 shadow-lg rounded-xl border border-gray-100 animate-pulse">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-full w-14 h-14 bg-gray-200"></div>
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+                <div className="mt-4 space-y-2">
+                  <div className="h-3 bg-gray-200 rounded"></div>
+                  <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-lg">
+            <div className="text-center max-w-md">
+              <FaFileAlt className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-lg font-medium text-gray-900">Error loading documents</h3>
+              <p className="mt-1 text-sm text-gray-500">{error}</p>
+              <Button onClick={handleRetry} className="mt-4">
+                Try Again
+              </Button>
+            </div>
+          </div>
         ) : documents.length === 0 ? (
-          <p className="text-gray-500">
-            No documents available for Client ID: {user?.clientId}. Upload a document to get started.
-          </p>
+          <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-lg">
+            <div className="text-center max-w-md">
+              <FaFileAlt className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-lg font-medium text-gray-900">No documents found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Get started by uploading your first document
+              </p>
+              <DocumentUploadDialog onSuccess={handleUploadSuccess}>
+                <Button className="mt-4 gap-2">
+                  <FaUpload className="h-4 w-4" />
+                  Upload Document
+                </Button>
+              </DocumentUploadDialog>
+            </div>
+          </div>
         ) : (
-          <DocumentCardList documents={documents} loading={loading} />
+          <>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-700">
+                Your Documents ({documents.length})
+              </h2>
+            </div>
+            <DocumentCardList documents={documents} />
+          </>
         )}
       </div>
     </div>

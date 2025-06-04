@@ -42,7 +42,7 @@ const imageVariants = {
   },
 }
 
-function Home() {
+function Hero() {
   return (
     <div>
       <motion.section
@@ -142,4 +142,4 @@ function Home() {
   )
 }
 
-export default Home
+export default Hero

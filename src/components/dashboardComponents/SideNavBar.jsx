@@ -59,7 +59,7 @@ export default function SideNavBar() {
     },
     {
       name: 'Profile',
-      href: '/dashboard/profile',
+      href: user?.clientId ? `/clients/${user.clientId}/profile` : '#',
       icon: UserRound,
     },
   ];
@@ -165,7 +165,7 @@ export default function SideNavBar() {
       <button
         onClick={() => setLogoutConfirmOpen(true)}
         disabled={loader}
-        className={`flex gap-4 items-center py-3 px-4 rounded-lg bg-red-100 hover:bg-red-500 transition-all duration-300 group ${
+        className={`cursor-pointer flex gap-4 items-center py-3 px-4 rounded-lg bg-red-100 hover:bg-red-500 transition-all duration-300 group ${
           loader ? 'opacity-50 cursor-not-allowed' : ''
         }`}
       >
@@ -189,13 +189,13 @@ export default function SideNavBar() {
             <p>Are you sure you want to log out?</p>
           </div>
           <DialogFooter className="sm:justify-end">
-            <Button variant="outline" onClick={() => setLogoutConfirmOpen(false)}>
+            <Button variant="outline" onClick={() => setLogoutConfirmOpen(false)} className="cursor-pointer">
               Cancel
             </Button>
             <Button
               onClick={handleLogout}
               disabled={loader}
-              className="bg-red-500 hover:bg-red-600"
+              className="bg-red-500 hover:bg-red-600 cursor-pointer"
             >
               {loader && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {loader ? 'Logging out...' : 'Logout'}

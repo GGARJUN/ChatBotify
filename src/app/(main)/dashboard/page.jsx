@@ -149,65 +149,23 @@
 "use client";
 
 import { useAuth } from '@/context/AuthContext';
-import BotList from './_component/BotList';
-import CreateBot from './bots/_components/CreateBot';
+import BotList from '@/components/botComponents/BotList';
+import CreateBot from '@/components/botComponents/CreateBot';
 
 export default function DashBoard() {
   const { user } = useAuth();
   console.log(user);
-  
-
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Welcome back, {user.name} !</h2>
-          <p className="text-sm text-slate-500">Your chatbot automation at a glance</p>
+          <p className="text-sm text-slate-500 mt-1">Your chatbot automation at a glance</p>
         </div>
-        {/* <BotDialog onSubmit={handleSubmit} loading={pageLoading} /> */}
         <CreateBot />
       </div>
       <BotList />
-
-      {/* Stats Cards */}
-      {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4 hover:shadow-lg transition-shadow">
-          <div className="bg-blue-200/50 rounded-full w-14 h-14 flex justify-center items-center">
-            <FaRobot className="text-blue-600 w-8 h-8" />
-          </div>
-          <div>
-            <h2 className="font-bold text-xl text-slate-900">5</h2>
-            <p className="text-sm font-medium text-slate-700">Active Bots</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4 hover:shadow-lg transition-shadow">
-          <div className="bg-green-200/50 rounded-full w-14 h-14 flex justify-center items-center">
-            <AiFillMessage className="text-green-600 w-8 h-8" />
-          </div>
-          <div>
-            <h2 className="font-bold text-xl text-slate-900">1,230</h2>
-            <p className="text-sm font-medium text-slate-700">Chats Handled</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-5 shadow-md flex items-center gap-4 hover:shadow-lg transition-shadow">
-          <div className="bg-yellow-200/50 rounded-full w-14 h-14 flex justify-center items-center">
-            <FaUsers className="text-yellow-600 w-8 h-8" />
-          </div>
-          <div>
-            <h2 className="font-bold text-xl text-slate-900">17</h2>
-            <p className="text-sm font-medium text-slate-700">Team Members</p>
-          </div>
-        </div>
-      </div> */}
-
-      {/* Recent Chatbots Section */}
-
-        {/* <BotTable bots={bots} onBotsUpdate={handleBotUpdate} /> */}
-
-
     </div>
   );
 }

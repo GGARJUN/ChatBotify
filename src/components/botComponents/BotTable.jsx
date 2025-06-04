@@ -9,9 +9,10 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { updateBot } from '@/lib/api/bots';
 
-export default function BotTable({ bots = [], onBotsUpdate }) {
+export default function BotTable({ bots = [], onBotsUpdate, loading = false }) {
     const [editOpen, setEditOpen] = useState(false);
     const [selectedBot, setSelectedBot] = useState(null);
+    const [processingId, setProcessingId] = useState(null);
 
     const handleEditClick = (bot) => {
         setSelectedBot(bot);
@@ -19,33 +20,35 @@ export default function BotTable({ bots = [], onBotsUpdate }) {
     };
 
     const handleUpdate = async (botId, data) => {
+        setProcessingId(botId);
         try {
             const token = localStorage.getItem('idToken');
             if (!token) {
-                toast.error('Authentication required.');
+                toast.error('Session expired. Please login again.');
                 return;
             }
 
             // Optimistic UI update
-            onBotsUpdate({
+            const optimisticBot = {
                 ...data,
                 id: botId,
                 updatedAt: new Date().toISOString()
-            });
+            };
+            onBotsUpdate(optimisticBot);
 
-            // Update on server
+            // Server update
             const updatedBot = await updateBot(botId, data, token);
-            onBotsUpdate(updatedBot); // Final sync
+            onBotsUpdate(updatedBot);
 
             setEditOpen(false);
-            // toast.success('Bot updated successfully');
-            console.log('Bot updated successfully');
-            
+            toast.success('Bot updated successfully');
         } catch (error) {
-            console.error('Error updating bot:', error.message);
-            toast.error('Failed to update bot');
-            // Optionally re-fetch bots here
-            fetchBots(); // Fallback to reload bots from server
+            console.error('Error updating bot:', error);
+            toast.error(error.message || 'Failed to update bot');
+            // Revert optimistic update on error
+            onBotsUpdate(bots.find(bot => bot.id === botId));
+        } finally {
+            setProcessingId(null);
         }
     };
 
@@ -71,7 +74,7 @@ export default function BotTable({ bots = [], onBotsUpdate }) {
         </div>
     );
 
-    if (!bots || bots.length === 0) {
+    if (loading) {
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(3)].map((_, index) => (
@@ -81,14 +84,32 @@ export default function BotTable({ bots = [], onBotsUpdate }) {
         );
     }
 
+    if (!bots || bots.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-12">
+                <div className="text-center max-w-md">
+                    <div className="mx-auto h-20 w-20 bg-gray-200 rounded-full flex items-center justify-center">
+                        <FaRobot className="text-gray-700 h-10 w-10" />
+                    </div>
+                    <h3 className="mt-2 text-lg font-medium text-gray-900">No bots created</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Get started by creating your first bot.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {bots.map((item, index) => {
+                {bots.map((item) => {
                     const bot = item.bot || item;
+                    const isProcessing = processingId === bot.id;
+
                     return (
                         <div
-                            key={bot.id || index}
+                            key={bot.id}
                             className="bg-white p-5 shadow-lg rounded-xl border border-gray-100 hover:shadow-xl transition-shadow"
                         >
                             <div className="flex items-center gap-4">
@@ -126,14 +147,23 @@ export default function BotTable({ bots = [], onBotsUpdate }) {
                                 </span>
                             </div>
                             <div className="mt-4">
-                                <p className="text-sm font-medium text-slate-700 line-clamp-2">{bot.description}</p>
+                                <p className="text-sm font-medium text-slate-700 line-clamp-2">
+                                    {bot.description}
+                                </p>
                                 <div className="flex items-center justify-start gap-6 mt-4">
                                     <button
                                         onClick={() => handleEditClick(bot)}
-                                        className="text-blue-600 font-medium flex items-center gap-1 hover:underline focus:outline-none"
+                                        disabled={isProcessing}
+                                        className={`text-blue-600 font-medium flex items-center gap-1 hover:underline focus:outline-none ${
+                                            isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
                                         aria-label="Edit bot"
                                     >
-                                        <Edit size={14} />
+                                        {isProcessing ? (
+                                            <span className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></span>
+                                        ) : (
+                                            <Edit size={14} />
+                                        )}
                                         Edit
                                     </button>
                                     <Link href={`/dashboard/bots/${bot.id}`}>

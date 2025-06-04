@@ -1,8 +1,7 @@
-"use client";
 
 function DashboardLayout({ children }) {
   return (
-    <div className="">
+    <div>
       {children}
     </div>
   );

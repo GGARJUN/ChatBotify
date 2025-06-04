@@ -6,16 +6,15 @@ import { BiSolidFileTxt } from 'react-icons/bi';
 import { AiOutlineDelete, AiOutlineEye } from 'react-icons/ai';
 import { formatFileSize } from '@/lib/utils';
 import { toast } from 'sonner';
-import { downloadDocument, deleteDocument } from '@/lib/api/documents';
+import { downloadDocument } from '@/lib/api/documents';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 
-export default function DocumentCardList({ documents = [] }) {
+export default function DocumentCardList({ documents = [], loading = false }) {
   const [loadingId, setLoadingId] = React.useState(null);
   const [previewDoc, setPreviewDoc] = React.useState(null);
-    const { user } = useAuth();
-  
+  const { user } = useAuth();
 
   const handleDownload = async (doc) => {
     try {
@@ -51,7 +50,6 @@ export default function DocumentCardList({ documents = [] }) {
       }
 
       const { data, filename } = await downloadDocument(doc.s3Url, doc.id, token, true);
-      // Convert ArrayBuffer to Blob for rendering
       const blob = new Blob([data], { type: doc.fileType });
       const url = URL.createObjectURL(blob);
       setPreviewDoc({ url, filename, type: doc.fileType });
@@ -62,7 +60,6 @@ export default function DocumentCardList({ documents = [] }) {
       setLoadingId(null);
     }
   };
-
 
   const getFileTypeIcon = (fileType) => {
     switch (fileType) {
@@ -112,7 +109,7 @@ export default function DocumentCardList({ documents = [] }) {
     </div>
   );
 
-  if (!documents || documents.length === 0) {
+  if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(3)].map((_, index) => (
@@ -121,7 +118,7 @@ export default function DocumentCardList({ documents = [] }) {
       </div>
     );
   }
-
+  
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

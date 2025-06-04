@@ -1,262 +1,9 @@
-// import { createContext, useState, useContext, useEffect } from 'react';
-// import { useRouter } from 'next/navigation';
-// import { signIn, signUp } from '@/lib/api/auth';
-// import { jwtDecode } from 'jwt-decode';
-// import { toast } from 'sonner';
-
-// const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//   const [user, setUser] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const router = useRouter();
-
-//   // Initialize user from localStorage
-//   useEffect(() => {
-//     const initializeAuth = () => {
-//       const storedUser = localStorage.getItem('user');
-//       if (storedUser) {
-//         try {
-//           setUser(JSON.parse(storedUser));
-//         } catch {
-//           localStorage.removeItem('user');
-//         }
-//       }
-//       setLoading(false);
-//     };
-//     initializeAuth();
-//   }, []);
-
-//   // Login function
-//   const login = async (credentials) => {
-//     try {
-//       const response = await signIn(credentials);
-//       const idToken = response.idToken;
-//       const decodedUser = jwtDecode(idToken);
-
-//       const userData = {
-//         userId: decodedUser["custom:userId"] || decodedUser.sub,
-//         email: decodedUser.email || "",
-//         name: decodedUser.name || "",
-//         clientId: decodedUser["custom:clientId"] || null,
-//       };
-
-//       localStorage.setItem('user', JSON.stringify(userData));
-//       localStorage.setItem('idToken', response.idToken);
-//       localStorage.setItem('accessToken', response.accessToken);
-//       localStorage.setItem('refreshToken', response.refreshToken);
-//       setUser(userData);
-//       toast.success('You have been logged in successfully');
-//       router.push('/dashboard');
-//     } catch (error) {
-//       console.error("Login error:", error);
-//       let errorMessage = 'Unable to log in. Please try again later.';
-//       if (error.message.includes('NotAuthorizedException')) {
-//         errorMessage = 'Incorrect email or password';
-//       } else if (error.message.includes('UserNotFoundException')) {
-//         errorMessage = 'User does not exist';
-//       } else if (error.message.includes('UserNotConfirmedException')) {
-//         errorMessage = 'Please confirm your account before logging in';
-//       }
-//       toast.error(errorMessage);
-//       throw new Error(errorMessage);
-//     }
-//   };
-
-//   // Register function
-//   const register = async (userData) => {
-//     try {
-//       const response = await signUp(userData);
-//       if (!response) throw new Error("Registration failed");
-
-//       const newUser = {
-//         email: response.emailId,
-//         firstName: response.firstName,
-//         lastName: response.lastName,
-//         clientId: response.clientId
-//       };
-
-//       localStorage.setItem('user', JSON.stringify(newUser));
-//       localStorage.setItem('idToken', response.idToken);
-//       localStorage.setItem('accessToken', response.accessToken);
-//       localStorage.setItem('refreshToken', response.refreshToken);
-
-//       setUser(newUser);
-//       toast.success('Registration successful!');
-//       router.push('/dashboard');
-//     } catch (error) {
-//       console.error("Registration error:", error);
-//       let errorMessage = 'Registration failed. Please try again.';
-//       if (error.message.includes('UsernameExistsException')) {
-//         errorMessage = 'An account with this email already exists.';
-//       }
-//       toast.error(errorMessage);
-//       throw new Error(errorMessage);
-//     }
-//   };
-
-//   // Logout function
-//   const logout = () => {
-//     setUser(null);
-//     localStorage.removeItem('user');
-//     localStorage.removeItem('idToken');
-//     localStorage.removeItem('accessToken');
-//     localStorage.removeItem('refreshToken');
-//     router.push('/auth/login');
-//     // toast.info('You have been logged out.');
-//   };
-
-//   return (
-//     <AuthContext.Provider value={{ user, loading, login, register, logout, setUser }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// };
-
-// export const useAuth = () => useContext(AuthContext);
-
-
-// context/AuthContext.jsx
-
-// "use client";
-
-// import { createContext, useState, useContext, useEffect, useCallback } from 'react';
-// import { useRouter } from 'next/navigation';
-// import { toast } from 'sonner';
-// import { jwtDecode } from 'jwt-decode';
-// import { signIn, signUp } from '@/lib/api/auth';
-
-// const AuthContext = createContext(undefined);
-
-// export const AuthProvider = ({ children }) => {
-//   const [user, setUser] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const router = useRouter();
-
-//   const initializeAuth = useCallback(() => {
-//     try {
-//       const storedUser = localStorage.getItem('user');
-//       if (storedUser) {
-//         const parsedUser = JSON.parse(storedUser) ;
-//         setUser(parsedUser);
-//       }
-//     } catch (err) {
-//       console.error("Failed to initialize auth", err);
-//       localStorage.removeItem('user');
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, []);
-
-//   useEffect(() => {
-//     initializeAuth();
-//   }, [initializeAuth]);
-
-//   const login = async (credentials) => {
-//     try {
-//       const response = await signIn(credentials);
-//       const idToken = response.idToken;
-//       const decodedUser = jwtDecode(idToken) ;
-
-//       const userData = {
-//         userId: decodedUser["custom:userId"] || decodedUser.sub,
-//         email: decodedUser.email || "",
-//         name: decodedUser.name || "",
-//         clientId: decodedUser["custom:clientId"] || null,
-//       };
-
-//       // Clear existing session if clientId changes
-//       const prevUser = JSON.parse(localStorage.getItem('user') || 'null');
-//       if (prevUser && prevUser.clientId !== userData.clientId) {
-//         localStorage.clear();
-//       }
-
-
-//       localStorage.setItem('idToken', idToken);
-
-
-//       setUser(userData);
-//       toast.success('Login successful');
-//       router.push('/dashboard');
-//     } catch (error) {
-//       console.error("Login error:", error);
-//       let errorMessage = 'Login failed. Please try again.';
-      
-//       if (error.message.includes('NotAuthorizedException')) {
-//         errorMessage = 'Incorrect email or password';
-//       } else if (error.message.includes('UserNotFoundException')) {
-//         errorMessage = 'User not found';
-//       } else if (error.message.includes('UserNotConfirmedException')) {
-//         errorMessage = 'Please verify your email first';
-//       } else if (error.message.includes('Network error')) {
-//         errorMessage = 'Network error. Please check your connection.';
-//       }
-
-//       toast.error(errorMessage);
-//       throw error;
-//     }
-//   };
-
-//   const register = async (userData) => {
-//     try {
-//       const response = await signUp(userData);
-//       if (!response) throw new Error("Registration failed");
-
-//       const newUser = {
-//         email: response.emailId,
-//         name: `${userData.firstName} ${userData.lastName}`,
-//         userId: response.userId,
-//         clientId: response.clientId,
-//       };
-
-//       localStorage.setItem('user', JSON.stringify(newUser));
-//       setUser(newUser);
-//       toast.success('Registration successful! Please check your email to verify your account.');
-//       router.push('/verify-email');
-//     } catch (error) {
-//       console.error("Registration error:", error);
-//       let errorMessage = 'Registration failed. Please try again.';
-      
-//       if (error.message.includes('UsernameExistsException')) {
-//         errorMessage = 'Email already in use';
-//       } else if (error.message.includes('Network error')) {
-//         errorMessage = 'Network error. Please check your connection.';
-//       }
-
-//       toast.error(errorMessage);
-//       throw error;
-//     }
-//   };
-
-//   const logout = () => {
-//     setUser(null);
-//     localStorage.clear();
-//     toast.info('You have been logged out');
-//     router.push('/login');
-//   };
-
-//   return (
-//     <AuthContext.Provider value={{ user, loading, login, register, logout }}>
-//       {!loading && children}
-//     </AuthContext.Provider>
-//   );
-// };
-
-// export const useAuth = () => {
-//   const context = useContext(AuthContext);
-//   if (context === undefined) {
-//     throw new Error('useAuth must be used within an AuthProvider');
-//   }
-//   return context;
-// };
 
 
 
+'use client';
 
-
-"use client";
-
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn, signUp } from '@/lib/api/auth';
 import { jwtDecode } from 'jwt-decode';
@@ -267,108 +14,298 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
   const router = useRouter();
 
-  // Initialize user from localStorage
-  useEffect(() => {
-    const initializeAuth = () => {
+  // Initialize auth state from localStorage
+  const initializeAuth = useCallback(() => {
+    try {
       const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch {
-          localStorage.removeItem('user');
+      const idToken = localStorage.getItem('idToken');
+      const accessToken = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+
+      if (storedUser && idToken && accessToken && refreshToken) {
+        const parsedUser = JSON.parse(storedUser);
+
+        // Verify token expiration with toast notification
+        const decodedToken = jwtDecode(idToken);
+        if (decodedToken.exp * 1000 < Date.now()) {
+          toast.error('Your session has expired. Please log in again.', {
+            duration: 5000,
+            action: {
+              label: 'Login',
+              onClick: () => router.push('/auth/login')
+            }
+          });
+          throw new Error('Session expired');
         }
+
+        setUser(parsedUser);
       }
+    } catch (error) {
+      console.error("Auth initialization error:", error);
+      localStorage.clear();
+      setUser(null);
+    } finally {
       setLoading(false);
-    };
-    initializeAuth();
+    }
   }, []);
 
-  // Login function
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  // Enhanced login with session validation
   const login = async (credentials) => {
     try {
-      const response = await signIn(credentials);
-      const idToken = response.idToken;
-      const decodedUser = jwtDecode(idToken);
+      setLoading(true);
+      setAuthError(null);
 
+      // Basic client-side validation
+      if (!credentials.email || !credentials.password) {
+        throw new Error('Email and password are required');
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentials.email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      const response = await signIn(credentials);
+      const { idToken, accessToken, refreshToken } = response;
+
+      const decodedUser = jwtDecode(idToken);
       const userData = {
         userId: decodedUser["custom:userId"] || decodedUser.sub,
-        email: decodedUser.email || "",
+        email: decodedUser.email,
         name: decodedUser.name || "",
         clientId: decodedUser["custom:clientId"] || null,
+        isVerified: decodedUser.email_verified === 'true'
       };
 
+      // Store tokens and user data
       localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('idToken', response.idToken);
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.setItem('idToken', idToken);
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+
       setUser(userData);
-      toast.success('You have been logged in successfully');
+
       router.push('/dashboard');
     } catch (error) {
       console.error("Login error:", error);
-      let errorMessage = 'Unable to log in. Please try again later.';
+      let errorMessage = 'Login failed. Please try again.';
+
       if (error.message.includes('NotAuthorizedException')) {
-        errorMessage = 'Incorrect email or password';
+        errorMessage = 'Invalid credentials';
       } else if (error.message.includes('UserNotFoundException')) {
-        errorMessage = 'User does not exist';
+        errorMessage = 'User not found';
       } else if (error.message.includes('UserNotConfirmedException')) {
-        errorMessage = 'Please confirm your account before logging in';
+        errorMessage = 'Please verify your email first';
+      } else if (error.message.includes('TooManyFailedAttemptsException')) {
+        errorMessage = 'Account temporarily locked due to too many failed attempts';
+      } else if (error.message.includes('Network error')) {
+        errorMessage = 'Network error. Please check your connection.';
       }
+
+      setAuthError(errorMessage);
       toast.error(errorMessage);
-      throw new Error(errorMessage);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Register function
+  // Enhanced registration with comprehensive validation
   const register = async (userData) => {
     try {
-      const response = await signUp(userData);
-      if (!response) throw new Error("Registration failed");
+      setLoading(true);
+      setAuthError(null);
 
+      // Client-side validation
+      if (!userData.email || !userData.password || !userData.firstName || !userData.lastName) {
+        throw new Error('All fields are required');
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      if (userData.password.length < 8) {
+        throw new Error('Password must be at least 8 characters');
+      }
+
+      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(userData.password)) {
+        throw new Error('Password must contain uppercase, lowercase, number and special character');
+      }
+
+      const response = await signUp(userData);
       const newUser = {
-        email: response.emailId,
-        firstName: response.firstName,
-        lastName: response.lastName,
-        clientId: response.clientId
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        clientId: response.clientId,
+        isVerified: true
       };
 
-      localStorage.setItem('user', JSON.stringify(newUser));
-      localStorage.setItem('idToken', response.idToken);
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
-
+      localStorage.setItem('tempUser', JSON.stringify(newUser));
       setUser(newUser);
-      toast.success('Registration successful!');
       router.push('/dashboard');
     } catch (error) {
       console.error("Registration error:", error);
       let errorMessage = 'Registration failed. Please try again.';
+
       if (error.message.includes('UsernameExistsException')) {
-        errorMessage = 'An account with this email already exists.';
+        errorMessage = 'Email already in use';
+      } else if (error.message.includes('InvalidPasswordException')) {
+        errorMessage = 'Password does not meet requirements';
+      } else if (error.message.includes('InvalidParameterException')) {
+        errorMessage = 'Invalid registration details';
       }
+
+      setAuthError(errorMessage);
       toast.error(errorMessage);
-      throw new Error(errorMessage);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Logout function
+  // Forgot password functionality
+  const forgotPassword = async (email) => {
+    try {
+      setLoading(true);
+      setAuthError(null);
+
+      if (!email) {
+        throw new Error('Email is required');
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      const response = await fetch('https://p12k32pylk.execute-api.us-east-1.amazonaws.com/dev/auth/forgotPwd', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ emailId: email }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send reset code');
+      }
+
+      toast.success('Reset code sent to your email');
+      router.push('/auth/reset-password');
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      let errorMessage = 'Failed to send reset code. Please try again.';
+
+      if (error.message.includes('UserNotFoundException')) {
+        errorMessage = 'User not found';
+      } else if (error.message.includes('LimitExceededException')) {
+        errorMessage = 'Too many requests. Please try again later.';
+      }
+
+      setAuthError(errorMessage);
+      toast.error(errorMessage);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset password functionality
+  const resetPassword = async (email, confirmationCode, newPassword) => {
+    try {
+      setLoading(true);
+      setAuthError(null);
+
+      if (!email || !confirmationCode || !newPassword) {
+        throw new Error('All fields are required');
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      if (newPassword.length < 8) {
+        throw new Error('Password must be at least 8 characters');
+      }
+
+      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(newPassword)) {
+        throw new Error('Password must contain uppercase, lowercase, number and special character');
+      }
+
+      const response = await fetch('https://p12k32pylk.execute-api.us-east-1.amazonaws.com/dev/auth/resetPwd', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          emailId: email,
+          newPassword,
+          confirmationCode
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reset password');
+      }
+
+      toast.success('Password reset successful');
+      router.push('/auth/login');
+    } catch (error) {
+      console.error("Reset password error:", error);
+      let errorMessage = 'Failed to reset password. Please try again.';
+
+      if (error.message.includes('CodeMismatchException')) {
+        errorMessage = 'Invalid verification code';
+      } else if (error.message.includes('ExpiredCodeException')) {
+        errorMessage = 'Verification code has expired';
+      } else if (error.message.includes('UserNotFoundException')) {
+        errorMessage = 'User not found';
+      }
+
+      setAuthError(errorMessage);
+      toast.error(errorMessage);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Secure logout
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('idToken');
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    localStorage.clear();
+    sessionStorage.clear();
     router.push('/auth/login');
-    // toast.info('You have been logged out.');
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      authError,
+      login,
+      register,
+      forgotPassword,
+      resetPassword,
+      logout,
+      setUser
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
