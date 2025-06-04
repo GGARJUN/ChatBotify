@@ -134,7 +134,7 @@ function CreateBot() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button className="gap-2 ">
           <FaPlus />
           Create New Bot
         </Button>

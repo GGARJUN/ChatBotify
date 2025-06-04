@@ -154,7 +154,7 @@ export default function BotTable({ bots = [], onBotsUpdate, loading = false }) {
                                     <button
                                         onClick={() => handleEditClick(bot)}
                                         disabled={isProcessing}
-                                        className={`text-blue-600 font-medium flex items-center gap-1 hover:underline focus:outline-none ${
+                                        className={`text-blue-600 font-medium flex cursor-pointer items-center gap-1 hover:underline focus:outline-none ${
                                             isProcessing ? 'opacity-50 cursor-not-allowed' : ''
                                         }`}
                                         aria-label="Edit bot"
@@ -168,7 +168,7 @@ export default function BotTable({ bots = [], onBotsUpdate, loading = false }) {
                                     </button>
                                     <Link href={`/dashboard/bots/${bot.id}`}>
                                         <button
-                                            className="text-slate-600 font-medium flex items-center gap-1 hover:underline focus:outline-none"
+                                            className="text-slate-600 cursor-pointer font-medium flex items-center gap-1 hover:underline focus:outline-none"
                                             aria-label="Preview bot"
                                         >
                                             <FaEye size={14} />
@@ -176,7 +176,7 @@ export default function BotTable({ bots = [], onBotsUpdate, loading = false }) {
                                         </button>
                                     </Link>
                                     <button
-                                        className="text-red-600 font-medium flex items-center gap-1 hover:underline focus:outline-none"
+                                        className="text-red-600 cursor-pointer font-medium flex items-center gap-1 hover:underline focus:outline-none"
                                         aria-label="Delete bot"
                                     >
                                         <FaTrash size={14} />

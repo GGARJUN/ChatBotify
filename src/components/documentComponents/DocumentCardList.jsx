@@ -148,7 +148,7 @@ export default function DocumentCardList({ documents = [], loading = false }) {
               <Link href={`/clients/${user.clientId}/docs/${doc.id}`}>
                 <button
                   aria-label="View document"
-                  className="text-blue-600 flex items-center gap-2"
+                  className="text-blue-600 flex items-center gap-2 cursor-pointer hover:underline transition-all duration-300"
                 >
                   <AiOutlineEye size={18} />
                   <span>View</span>
@@ -158,7 +158,7 @@ export default function DocumentCardList({ documents = [], loading = false }) {
                 onClick={() => handlePreview(doc)}
                 aria-label="Preview document"
                 disabled={loadingId === doc.id}
-                className={`text-green-600 flex items-center gap-2 ${
+                className={`text-green-600 flex items-center gap-2 cursor-pointer hover:underline transition-all duration-300 ${
                   loadingId === doc.id ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
@@ -178,7 +178,7 @@ export default function DocumentCardList({ documents = [], loading = false }) {
                 onClick={() => handleDelete(doc.id)}
                 aria-label="Delete document"
                 disabled={loadingId === doc.id}
-                className={`text-red-600 flex items-center gap-2 ${
+                className={`text-red-600 flex items-center gap-2 cursor-pointer hover:underline transition-all duration-300 ${
                   loadingId === doc.id ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >

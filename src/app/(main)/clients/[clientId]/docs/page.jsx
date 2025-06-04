@@ -1,7 +1,5 @@
 'use client';
 
-import DocumentCardList from '@/components/documentComponents/DocumentCardList';
-import DocumentUploadDialog from '@/components/documentComponents/DocumentUploadDialog';
 import { useAuth } from '@/context/AuthContext';
 import { getDocuments } from '@/lib/api/documents';
 import { useRouter } from 'next/navigation';
@@ -9,6 +7,8 @@ import React, { useEffect, useState } from 'react';
 import { FaFileAlt, FaUpload } from 'react-icons/fa';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import DocumentCardList from '@/components/documentComponents/DocumentCardList';
+import DocumentUploadDialog from '@/components/documentComponents/DocumentUploadDialog';
 
 export default function Documents() {
   const router = useRouter();

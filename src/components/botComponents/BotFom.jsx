@@ -254,7 +254,7 @@ export default function BotForm({ onSubmit, loading, defaultClientId }) {
         <Button
           type="submit"
           disabled={loading}
-          className="bg-gradient-to-t from-[#7856ff] to-[#9075ff] text-white hover:rounded-md transition-all duration-300 disabled:opacity-70"
+          className=" "
         >
           {loading ? (
             <span className="flex items-center">

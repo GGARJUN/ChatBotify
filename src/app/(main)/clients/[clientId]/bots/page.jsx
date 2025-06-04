@@ -244,7 +244,7 @@ export default function BotsPage() {
                             <div className="flex items-center gap-2">
                               <button
                                 aria-label="Preview document"
-                                className="p-1 border border-gray-300 rounded hover:text-blue-500"
+                                className="p-1 border cursor-pointer border-gray-300 rounded hover:text-blue-500"
                                 onClick={() => handlePreview(doc)}
                                 disabled={loadingId === doc.id}
                               >
@@ -252,7 +252,7 @@ export default function BotsPage() {
                               </button>
                               <button
                                 aria-label="Delete document"
-                                className="p-1 border border-gray-300 rounded hover:text-red-500"
+                                className="p-1 border cursor-pointer border-gray-300 rounded hover:text-red-500"
                               >
                                 <IoMdClose size={16} />
                               </button>
