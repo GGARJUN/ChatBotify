@@ -94,6 +94,3 @@ styles/: CSS files for styling the application.
 
 This project uses next/font to automatically optimize and load Geist, a
 font family by Vercel.
-
-
-
