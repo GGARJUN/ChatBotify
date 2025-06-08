@@ -3,21 +3,21 @@
 import { getBots } from "@/lib/api/bots";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { FaDownload, FaRobot } from "react-icons/fa6";
+import { FaDownload, FaLink, FaRobot } from "react-icons/fa6";
 import { toast } from "sonner";
 import { FiEye } from "react-icons/fi";
-import { BiSolidFileTxt } from "react-icons/bi";
 import { Button } from "@/components/ui/button";
 import { IoMdClose } from "react-icons/io";
 import { useRouter } from "next/navigation";
 import { downloadDocument, getDocuments } from "@/lib/api/documents";
 import Link from "next/link";
 import CreateBot from "@/components/botComponents/CreateBot";
-import { SiSpeedtest } from "react-icons/si";
-import Widget from "@/components/botComponents/Widget";
+import { Loader2, X } from "lucide-react";
+import { FaFilePdf, FaFileWord } from 'react-icons/fa6';
+import { BiSolidFileTxt } from 'react-icons/bi';
+import { formatFileSize } from "@/lib/utils";
 
 export default function BotsPage() {
-  const [selectedBot, setSelectedBot] = useState(null);
   const [bots, setBots] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -154,6 +154,32 @@ export default function BotsPage() {
     };
   }, [previewDoc]);
 
+  const getFileTypeIcon = (fileType) => {
+    switch (fileType) {
+      case 'application/pdf':
+        return <FaFilePdf className="text-red-500 w-6 h-6 mt-1" />;
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        return <FaFileWord className="text-blue-600 w-6 h-6 mt-1" />;
+      case 'text/plain':
+        return <BiSolidFileTxt className="text-green-600 w-7 h-7 mt-1" />;
+      default:
+        return <span className="text-gray-400 w-6 h-6 mt-1">📄</span>;
+    }
+  };
+
+  const getFileTypeLabel = (fileType) => {
+    switch (fileType) {
+      case 'application/pdf':
+        return 'PDF Document';
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        return 'Word Document';
+      case 'text/plain':
+        return 'Text File';
+      default:
+        return 'Document';
+    }
+  };
+
   // Skeleton Loader
   const SkeletonCard = () => (
     <div className="bg-white p-5 shadow rounded-xl border border-gray-200 animate-pulse">
@@ -185,10 +211,6 @@ export default function BotsPage() {
     </div>
   );
 
-  // Toggle chat widget for a specific bot
-  const toggleChat = (bot) => {
-    setSelectedBot(selectedBot && selectedBot.id === bot.id ? null : bot);
-  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -237,16 +259,22 @@ export default function BotsPage() {
                     {/* Bot Header */}
                     <div className="flex items-center gap-4 mb-4">
                       <div
-                        className={`rounded-full w-14 h-14 flex justify-center items-center ${
-                          bot.status === "ACTIVE" ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"
-                        }`}
+                        className={`rounded-full w-14 h-14 flex justify-center items-center ${bot.status === "ACTIVE" ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"
+                          }`}
                       >
                         <FaRobot className="w-8 h-8" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h2 className="font-semibold text-sm md:text-base text-slate-900 truncate">{bot.name}</h2>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {docs.length > 0 && `${docs.length} Document${docs.length > 1 ? "s" : ""} Linked`}
+                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                          <FaLink className="w-3 h-3" />
+                          {docs.length > 0 ? (
+                            <span>
+                              {docs.length} Document{docs.length !== 1 ? "s" : ""} Linked
+                            </span>
+                          ) : (
+                            "No Documents Linked"
+                          )}
                         </p>
                       </div>
                     </div>
@@ -259,13 +287,14 @@ export default function BotsPage() {
                           className="bg-slate-50 p-3 rounded-md flex items-center justify-between"
                         >
                           <div className="flex items-center gap-2">
-                            <BiSolidFileTxt className="text-green-600 w-6 h-6" />
+                            {getFileTypeIcon(doc.fileType)}
                             <div>
                               <span className="text-sm font-medium truncate max-w-[160px] block">
                                 {doc.name}
                               </span>
                               <p className="text-xs text-gray-500 mt-1">
-                                Updated: {new Date(doc.updatedAt).toLocaleDateString()}
+                                <span>{getFileTypeLabel(doc.fileType)} - </span>
+                                {formatFileSize(doc.fileSizeBytes)}
                               </p>
                             </div>
                           </div>
@@ -276,7 +305,13 @@ export default function BotsPage() {
                               onClick={() => handlePreview(doc)}
                               disabled={loadingId === doc.id}
                             >
-                              <FiEye size={14} />
+                              {loadingId === doc.id ? (
+                                <>
+                                  <Loader2 size={14} className='animate-spin' />
+                                </>
+                              ) : (
+                                <FiEye size={14} />
+                              )}
                             </button>
                             <button
                               aria-label="Delete document"
@@ -295,14 +330,6 @@ export default function BotsPage() {
                         <Button className="w-full py-2 text-sm">Manage Documents</Button>
                       </Link>
                     </div>
-                    <button
-                      onClick={() => toggleChat(bot)}
-                      className="text-green-600 cursor-pointer font-medium flex items-center gap-1 hover:underline focus:outline-none mt-2"
-                      aria-label="Test bot"
-                    >
-                      <SiSpeedtest size={14} />
-                      Test Bot
-                    </button>
                   </div>
                 );
               })}
@@ -321,20 +348,20 @@ export default function BotsPage() {
           aria-modal="true"
         >
           <div
-            className="bg-white rounded-2xl w-full max-w-[90vw] h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+            className="bg-white rounded-2xl w-full max-w-[95vw] h-[93vh] flex flex-col shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h2 id="preview-title" className="text-xl font-semibold text-gray-900 truncate max-w-[70%]">
                 {previewDoc.filename}
               </h2>
-              <button
+              <Button
                 onClick={closePreview}
-                className="text-gray-500 hover:text-gray-700 rounded-full w-10 h-10 flex items-center justify-center"
-                aria-label="Close document preview"
+                className="bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-6  flex items-center justify-center"
+                aria-label="Close preview"
               >
-                <IoMdClose size={24} />
-              </button>
+                <X />
+              </Button>
             </div>
             <div className="flex-1 overflow-auto p-6">
               {previewDoc.type === "application/pdf" && previewDoc.url && (
@@ -383,16 +410,6 @@ export default function BotsPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Chat Widget */}
-      {selectedBot && (
-        <Widget
-          onClose={() => setSelectedBot(null)}
-          botId={selectedBot.id}
-          botName={selectedBot.name}
-          clientId={user.clientId}
-        />
       )}
     </div>
   );

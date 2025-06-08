@@ -12,6 +12,7 @@ import { getSingleDocument, downloadDocument } from '@/lib/api/documents';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { X } from 'lucide-react';
 
 export default function DocumentIdPage() {
   const router = useRouter();
@@ -136,7 +137,7 @@ export default function DocumentIdPage() {
     <div className="p-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <Link href="/dashboard/knowledge-base">
+      <Link href={`/clients/${user.clientId}/docs/`}>
           <Button
             variant="ghost"
             className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 mb-4"
@@ -245,7 +246,7 @@ export default function DocumentIdPage() {
           aria-labelledby="preview-title"
           aria-modal="true"
         >
-          <div className="bg-white rounded-2xl w-full max-w-[90vw] h-[90vh] flex flex-col shadow-2xl">
+          <div className="bg-white rounded-2xl w-full max-w-[95vw] h-[93vh] flex flex-col shadow-2xl">
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h2 id="preview-title" className="text-xl font-semibold text-gray-900 truncate max-w-[70%]">
                 {previewDoc.filename}
@@ -255,10 +256,10 @@ export default function DocumentIdPage() {
                   URL.revokeObjectURL(previewDoc.url);
                   setPreviewDoc(null);
                 }}
-                className="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center"
+                className="bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-6  flex items-center justify-center"
                 aria-label="Close preview"
               >
-                ×
+                <X/>
               </Button>
             </div>
             <div className="flex-1 overflow-auto p-6">

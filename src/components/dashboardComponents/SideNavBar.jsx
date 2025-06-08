@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { checkSubscriptionStatus } from '@/lib/api/payment';
+import { getUserProfile } from '@/lib/api/users';
 
 
 
@@ -39,6 +40,11 @@ export default function SideNavBar() {
   const [isPro, setIsPro] = useState(false);
   const [checkingSub, setCheckingSub] = useState(true);
   const path = usePathname();
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
   // Navigation links configuration
   const navLinks = [
@@ -62,47 +68,69 @@ export default function SideNavBar() {
       href: user?.clientId ? `/clients/${user.clientId}/profile` : '#',
       icon: UserRound,
     },
-    // {
-    //   name: 'Upgrade',
-    //   href: user?.clientId ? `/clients/${user.clientId}/pricing` : '#',
-    //   icon: UserRound,
-    // },
   ];
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/auth/login');
-    }
-  }, [authLoading, user, router]);
 
-  // Check subscription status
-  useEffect(() => {
-    const fetchSubscription = async () => {
-      if (!user) {
-        setCheckingSub(false);
+  const fetchUserProfile = async () => {
+    try {
+      if (!user?.userId) {
+        toast.error('User not authenticated.');
+        setIsLoading(false);
         return;
       }
 
-      try {
-        const token = localStorage.getItem('idToken');
-        if (!token) {
-          throw new Error('No authentication token found.');
-        }
-
-        const isSubscribed = await checkSubscriptionStatus(token);
-        setIsPro(isSubscribed);
-        console.log('Updated isPro state:', isSubscribed);
-      } catch (error) {
-        console.error('Error fetching subscription status:', error.message);
-        setIsPro(false);
-      } finally {
-        setCheckingSub(false);
+      const token = localStorage.getItem('idToken');
+      if (!token) {
+        toast.error('Session expired. Please login again.');
+        setIsLoading(false);
+        return;
       }
-    };
 
-    fetchSubscription();
+      const userProfile = await getUserProfile(user.userId, token);
+      console.log(userProfile);
+
+      const fullName = `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim();
+      setFormData({
+        fullName: fullName || 'Not provided',
+        email: userProfile.email || 'Not provided',
+      });
+    } catch (error) {
+      toast.error('Failed to load profile. Please try again.');
+      console.error('Profile fetch error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchUserProfile();
   }, [user]);
+
+
+  const fetchSubscription = async () => {
+    if (!user) {
+      setCheckingSub(false);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('idToken');
+      if (!token) {
+        throw new Error('No authentication token found.');
+      }
+
+      const isSubscribed = await checkSubscriptionStatus(token);
+      setIsPro(isSubscribed);
+      console.log('Updated isPro state:', isSubscribed);
+    } catch (error) {
+      console.error('Error fetching subscription status:', error.message);
+      setIsPro(false);
+    } finally {
+      setCheckingSub(false);
+    }
+  };
+  useEffect(() => {
+    fetchSubscription();
+  }, []);
 
   const handleLogout = async () => {
     if (loader) return;
@@ -148,9 +176,9 @@ export default function SideNavBar() {
             <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
           </Avatar>
           <div>
-            <h2 className="font-semibold text-lg text-gray-800 text-center">{user?.name || 'User'}</h2>
+            <h2 className="font-semibold text-lg text-gray-800 text-center">{formData.fullName}</h2>
             <p className="text-sm text-gray-500 truncate  text-center">
-              {user?.email || 'No email'}
+            {formData.email}
             </p>
             <div className='flex justify-center items-center mt-2'>
               {checkingSub ? (
@@ -181,8 +209,8 @@ export default function SideNavBar() {
               <Link key={link.href} href={link.href}>
                 <div
                   className={`flex gap-4 items-center py-3 px-4 rounded-lg transition-all duration-300 group ${isActive
-                      ? 'bg-[#5f27cd] text-white'
-                      : 'hover:bg-[#5f27cd] hover:text-white text-gray-700'
+                    ? 'bg-[#5f27cd] text-white'
+                    : 'hover:bg-[#5f27cd] hover:text-white text-gray-700'
                     }`}
                   onClick={(e) => {
                     if (link.name === 'Bots' && !user.clientId) {
@@ -193,14 +221,14 @@ export default function SideNavBar() {
                 >
                   <Icon
                     className={`w-5 h-5 ${isActive
-                        ? 'text-white'
-                        : 'text-[#5f27cd] group-hover:text-white'
+                      ? 'text-white'
+                      : 'text-[#5f27cd] group-hover:text-white'
                       } transition-colors duration-300`}
                   />
                   <h2
                     className={`font-medium ${isActive
-                        ? 'text-white'
-                        : 'group-hover:text-white text-gray-700'
+                      ? 'text-white'
+                      : 'group-hover:text-white text-gray-700'
                       }`}
                   >
                     {link.name}

@@ -105,7 +105,7 @@ export default function Widget({ onClose, botId, botName }) {
           <h3 className="text-md font-semibold text-blue-700">{botName}</h3>
           <button
             onClick={onClose}
-            className="text-gray-900 text-sm"
+            className="text-gray-900 text-sm cursor-pointer"
             aria-label="Close chat"
           >
             <SquareX />

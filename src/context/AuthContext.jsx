@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }) => {
         email: decodedUser.email,
         name: decodedUser.name || "",
         clientId: decodedUser["custom:clientId"] || null,
-        isVerified: decodedUser.email_verified === 'true'
+        // isVerified: decodedUser.isVerified === 'true'
       };
 
       // Store tokens and user data
@@ -145,12 +145,13 @@ export const AuthProvider = ({ children }) => {
         firstName: userData.firstName,
         lastName: userData.lastName,
         clientId: response.clientId,
-        isVerified: true
+        // isVerified: false
       };
 
       localStorage.setItem('tempUser', JSON.stringify(newUser));
       setUser(newUser);
-      router.push('/dashboard');
+      toast.success('Registration successful! Please check your email for verification.');
+      router.push('/auth/login');
     } catch (error) {
       console.error("Registration error:", error);
       let errorMessage = 'Registration failed. Please try again.';

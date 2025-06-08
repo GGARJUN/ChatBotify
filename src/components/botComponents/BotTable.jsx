@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { useState } from 'react';
@@ -14,6 +16,7 @@ import Widget from './Widget';
 export default function BotTable({ bots = [], onBotsUpdate, loading = false }) {
   const [selectedBot, setSelectedBot] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   const { user } = useAuth();
 
@@ -31,33 +34,30 @@ export default function BotTable({ bots = [], onBotsUpdate, loading = false }) {
         return;
       }
 
-      // Optimistic UI update
-      const optimisticBot = {
-        ...data,
-        id: botId,
-        updatedAt: new Date().toISOString(),
-      };
-      onBotsUpdate(optimisticBot);
-
-      // Server update
       const updatedBot = await updateBot(botId, data, token);
-      onBotsUpdate(updatedBot);
-
+      console.log('Updated bot from API:', updatedBot); // Debug log
+      const botToUpdate = {
+        id: botId,
+        name: updatedBot.name || data.name,
+        description: updatedBot.description || data.description,
+        status: updatedBot.status || data.status,
+        updatedAt: new Date().toISOString(),
+        createdAt: bots.find((b) => b.id === botId)?.createdAt, // Preserve createdAt
+      };
+      onBotsUpdate(botToUpdate);
       setEditOpen(false);
       toast.success('Bot updated successfully');
     } catch (error) {
       console.error('Error updating bot:', error);
       toast.error(error.message || 'Failed to update bot');
-      // Revert optimistic update on error
-      onBotsUpdate(bots.find((bot) => bot.id === botId));
     } finally {
       setProcessingId(null);
     }
   };
 
-  // Toggle chat widget for a specific bot
   const toggleChat = (bot) => {
-    setSelectedBot(selectedBot && selectedBot.id === bot.id ? null : bot);
+    setSelectedBot(bot);
+    setChatOpen((prev) => !prev);
   };
 
   const SkeletonCard = () => (
@@ -100,9 +100,7 @@ export default function BotTable({ bots = [], onBotsUpdate, loading = false }) {
             <FaRobot className="text-gray-700 h-10 w-10" />
           </div>
           <h3 className="mt-2 text-lg font-medium text-gray-900">No bots created</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Get started by creating your first bot.
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Get started by creating your first bot.</p>
         </div>
       </div>
     );
@@ -111,8 +109,7 @@ export default function BotTable({ bots = [], onBotsUpdate, loading = false }) {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {bots.map((item) => {
-          const bot = item.bot || item;
+        {bots.map((bot) => {
           const isProcessing = processingId === bot.id;
 
           return (
@@ -159,7 +156,6 @@ export default function BotTable({ bots = [], onBotsUpdate, loading = false }) {
                     className={`text-blue-600 font-medium flex cursor-pointer items-center gap-1 hover:underline focus:outline-none ${
                       isProcessing ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
-                    aria-label="Edit bot"
                   >
                     {isProcessing ? (
                       <span className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></span>
@@ -168,22 +164,20 @@ export default function BotTable({ bots = [], onBotsUpdate, loading = false }) {
                     )}
                     Edit
                   </button>
-                  <Link href={`/clients/${user.clientId}/bots/${bot.id}`}>
-                    <button
-                      className="text-slate-600 cursor-pointer font-medium flex items-center gap-1 hover:underline focus:outline-none"
-                      aria-label="Preview bot"
-                    >
+                  <Link href={`/clients/${user.clientId}/bots/${bot.id}`} passHref>
+                    <span className="text-slate-600 font-medium flex items-center gap-1 hover:underline focus:outline-none">
                       <FaEye size={14} />
-                      Preview
-                    </button>
+                      View
+                    </span>
                   </Link>
                   <button
                     onClick={() => toggleChat(bot)}
-                    className="text-green-600 cursor-pointer font-medium flex items-center gap-1 hover:underline focus:outline-none"
-                    aria-label="Test bot"
+                    className={`text-green-600 font-medium flex items-center gap-1 hover:underline focus:outline-none ${
+                      chatOpen && selectedBot?.id === bot.id ? 'text-green-800 font-bold' : ''
+                    }`}
                   >
                     <SiSpeedtest size={14} />
-                    Test Bot
+                    {chatOpen && selectedBot?.id === bot.id ? 'Close Chat' : 'Test Bot'}
                   </button>
                 </div>
               </div>
@@ -192,16 +186,16 @@ export default function BotTable({ bots = [], onBotsUpdate, loading = false }) {
         })}
       </div>
 
-      {selectedBot && (
+      {selectedBot && chatOpen && (
         <Widget
-          onClose={() => setSelectedBot(null)}
+          onClose={() => setChatOpen(false)}
           botId={selectedBot.id}
           botName={selectedBot.name}
           clientId={user.clientId}
         />
       )}
 
-      {selectedBot && (
+      {selectedBot && editOpen && (
         <EditBotDialog
           bot={selectedBot}
           open={editOpen}

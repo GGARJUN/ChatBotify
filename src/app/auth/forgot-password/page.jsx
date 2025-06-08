@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import Header from '@/components/homeComponents/Header';
 
@@ -100,24 +99,6 @@ export default function ForgotPasswordPage() {
                                     />
                                     {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                                 </div>
-                                {/* <div className="text-left">
-                                    <label htmlFor="email" className="block text-sm font-medium mb-1">
-                                        Email *
-                                    </label>
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        autoComplete="email"
-                                        required
-                                        value={formValues.email}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        className={`w-full border rounded-lg p-3 ${errors.email ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-                                        placeholder="your@email.com"
-                                    />
-                                    {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                                </div> */}
                             </div>
 
                             <div>

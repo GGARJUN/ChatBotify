@@ -1,3 +1,6 @@
+
+
+
 'use client';
 
 import React, { useState } from 'react';
@@ -6,11 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
-const SUPPORTED_FILE_TYPES = {
-  PDF: 'application/pdf',
-  TXT: 'text/plain',
-  DOCX: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-};
+const SUPPORTED_FILE_TYPES = [
+  'application/pdf',
+  'text/plain',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function DocumentForm({ onSubmit, clientId }) {
@@ -18,10 +21,6 @@ export default function DocumentForm({ onSubmit, clientId }) {
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [fileError, setFileError] = useState('');
-
-  const handleDescriptionChange = (e) => {
-    setDescription(e.target.value);
-  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -32,17 +31,13 @@ export default function DocumentForm({ onSubmit, clientId }) {
       return;
     }
 
-    // Validate file type
-    if (!Object.values(SUPPORTED_FILE_TYPES).includes(selectedFile.type)) {
-      setFileError('Unsupported file type. Please upload PDF, TXT, or DOCX.');
-      setFile(null);
+    if (!SUPPORTED_FILE_TYPES.includes(selectedFile.type)) {
+      setFileError('Only PDF, TXT, and DOCX files are supported');
       return;
     }
 
-    // Validate file size
     if (selectedFile.size > MAX_FILE_SIZE) {
-      setFileError('File size exceeds 5MB limit');
-      setFile(null);
+      setFileError('File size must be less than 5MB');
       return;
     }
 
@@ -51,27 +46,26 @@ export default function DocumentForm({ onSubmit, clientId }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!file) {
-      setFileError('Please select a file to upload');
+      setFileError('Please select a file');
       return;
     }
 
     setLoading(true);
     try {
-      await onSubmit(
-        {
-          file,
-          description,
-          clientId,
-        },
-        setLoading
-      );
+      await onSubmit({
+        file,
+        description,
+        clientId
+      }, setLoading);
       // Reset form on success
       setFile(null);
       setDescription('');
       e.target.reset();
     } catch (error) {
+      console.error('Submission error:', error);
+    } finally {
       setLoading(false);
     }
   };
@@ -79,33 +73,26 @@ export default function DocumentForm({ onSubmit, clientId }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="clientId" className="text-right">Client ID</Label>
-        <Input
-          id="clientId"
-          value={clientId || ''}
-          readOnly
-          disabled
-          className="col-span-3 bg-gray-100 cursor-not-allowed"
-        />
-      </div>
-
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="description" className="text-right">Description</Label>
+        <Label htmlFor="description" className="text-right">
+          Description
+        </Label>
         <Textarea
           id="description"
           value={description}
-          onChange={handleDescriptionChange}
+          onChange={(e) => setDescription(e.target.value)}
           className="col-span-3"
-          placeholder="Document purpose or summary"
+          placeholder="Document description (optional)"
           rows={3}
         />
       </div>
 
       <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="fileIn" className="text-right">Document</Label>
+        <Label htmlFor="file" className="text-right">
+          Document
+        </Label>
         <div className="col-span-3">
           <Input
-            id="fileIn"
+            id="file"
             type="file"
             onChange={handleFileChange}
             accept=".pdf,.txt,.docx"
@@ -122,7 +109,7 @@ export default function DocumentForm({ onSubmit, clientId }) {
       </div>
 
       <div className="flex justify-end pt-4">
-        <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+        <Button type="submit" disabled={loading}>
           {loading ? 'Uploading...' : 'Upload Document'}
         </Button>
       </div>

@@ -3,18 +3,20 @@
 import React from 'react';
 import { FaFilePdf, FaFileWord, FaDownload } from 'react-icons/fa6';
 import { BiSolidFileTxt } from 'react-icons/bi';
-import { AiOutlineDelete, AiOutlineEye } from 'react-icons/ai';
 import { formatFileSize } from '@/lib/utils';
 import { toast } from 'sonner';
 import { downloadDocument } from '@/lib/api/documents';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
+import { FaEye, FaTrash } from 'react-icons/fa';
+import { Loader2, X } from 'lucide-react';
 
 export default function DocumentCardList({ documents = [], loading = false }) {
   const [loadingId, setLoadingId] = React.useState(null);
   const [previewDoc, setPreviewDoc] = React.useState(null);
   const { user } = useAuth();
+  const [loadingAction, setLoadingAction] = React.useState(null);
 
   const handleDownload = async (doc) => {
     try {
@@ -40,7 +42,7 @@ export default function DocumentCardList({ documents = [], loading = false }) {
 
   const handlePreview = async (doc) => {
     try {
-      setLoadingId(doc.id);
+      setLoadingAction(doc.id);
       const token = localStorage.getItem('idToken');
       if (!token) {
         throw new Error('Session expired. Please login again.');
@@ -52,12 +54,12 @@ export default function DocumentCardList({ documents = [], loading = false }) {
       const { data, filename } = await downloadDocument(doc.s3Url, doc.id, token, true);
       const blob = new Blob([data], { type: doc.fileType });
       const url = URL.createObjectURL(blob);
-      setPreviewDoc({ url, filename, type: doc.fileType });
-      toast.success('Document loaded for preview');
+      setPreviewDoc({ url, filename, type: doc.fileType, data });
+      toast.success('Document loaded for preview', { duration: 2000 });
     } catch (error) {
-      toast.error(error.message || 'Preview failed');
+      toast.error(error.message || 'Preview failed', { duration: 3000 });
     } finally {
-      setLoadingId(null);
+      setLoadingAction(null);
     }
   };
 
@@ -118,13 +120,12 @@ export default function DocumentCardList({ documents = [], loading = false }) {
       </div>
     );
   }
-  
+
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {documents.map((doc) => (
-          <div
-            key={doc.id}
+        {documents.map((doc, index) => (
+          <div key={index}
             className="bg-white p-5 shadow rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
           >
             <div className="flex items-center gap-3">
@@ -148,24 +149,22 @@ export default function DocumentCardList({ documents = [], loading = false }) {
               <Link href={`/clients/${user.clientId}/docs/${doc.id}`}>
                 <button
                   aria-label="View document"
-                  className="text-blue-600 flex items-center gap-2 cursor-pointer hover:underline transition-all duration-300"
+                  className="text-blue-600 font-semibold flex items-center gap-2 cursor-pointer hover:underline transition-all duration-300"
                 >
-                  <AiOutlineEye size={18} />
+                  <FaEye size={18} />
                   <span>View</span>
                 </button>
               </Link>
               <button
                 onClick={() => handlePreview(doc)}
                 aria-label="Preview document"
-                disabled={loadingId === doc.id}
-                className={`text-green-600 flex items-center gap-2 cursor-pointer hover:underline transition-all duration-300 ${
-                  loadingId === doc.id ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                disabled={loadingAction === doc.id}
+                className={`text-green-600 font-semibold flex items-center gap-2 cursor-pointer hover:underline transition-all duration-300 ${loadingAction === doc.id ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
               >
-                {loadingId === doc.id ? (
+                {loadingAction === doc.id ? (
                   <>
-                    <span className="animate-spin h-4 w-4 border-2 border-t-transparent border-white rounded-full"></span>
-                    <span>Loading...</span>
+                    <span className='flex items-center gap-1'><Loader2 className='animate-spin' /> Loading...</span>
                   </>
                 ) : (
                   <>
@@ -178,11 +177,10 @@ export default function DocumentCardList({ documents = [], loading = false }) {
                 onClick={() => handleDelete(doc.id)}
                 aria-label="Delete document"
                 disabled={loadingId === doc.id}
-                className={`text-red-600 flex items-center gap-2 cursor-pointer hover:underline transition-all duration-300 ${
-                  loadingId === doc.id ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className={`text-red-600 font-semibold flex items-center gap-2 cursor-pointer hover:underline transition-all duration-300 ${loadingId === doc.id ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
               >
-                <AiOutlineDelete size={18} />
+                <FaTrash size={18} />
                 <span>Delete</span>
               </button>
             </div>
@@ -190,6 +188,7 @@ export default function DocumentCardList({ documents = [], loading = false }) {
         ))}
       </div>
 
+      {/* Preview Modal */}
       {previewDoc && (
         <div
           className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
@@ -203,7 +202,7 @@ export default function DocumentCardList({ documents = [], loading = false }) {
           aria-labelledby="preview-title"
           aria-modal="true"
         >
-          <div className="bg-white rounded-2xl w-full max-w-[90vw] h-[90vh] flex flex-col shadow-2xl">
+          <div className="bg-white rounded-2xl w-full max-w-[95vw] h-[93vh] flex flex-col shadow-2xl">
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h2 id="preview-title" className="text-xl font-semibold text-gray-900 truncate max-w-[70%]">
                 {previewDoc.filename}
@@ -213,10 +212,10 @@ export default function DocumentCardList({ documents = [], loading = false }) {
                   URL.revokeObjectURL(previewDoc.url);
                   setPreviewDoc(null);
                 }}
-                className="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center"
+                className="bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-6 flex items-center justify-center"
                 aria-label="Close preview"
               >
-                &times;
+                <X />
               </Button>
             </div>
             <div className="flex-1 overflow-auto p-6">
@@ -243,11 +242,9 @@ export default function DocumentCardList({ documents = [], loading = false }) {
               )}
               {previewDoc.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' && (
                 <div className="text-center p-6 bg-gray-100 rounded-lg">
-                  <p className="text-gray-600 text-lg">
-                    Word document preview is not supported.
-                  </p>
+                  <p className="text-gray-600 text-lg">Word document preview is not supported.</p>
                   <Button
-                    onClick={() => handleDownload(documents.find((doc) => doc.fileName === previewDoc.filename))}
+                    onClick={handleDownload}
                     className="mt-4 bg-green-600 hover:bg-green-700 text-white"
                   >
                     <FaDownload className="mr-2" />
@@ -262,19 +259,17 @@ export default function DocumentCardList({ documents = [], loading = false }) {
                 'image/jpeg',
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
               ].includes(previewDoc.type) && (
-                <div className="text-center p-6 bg-gray-100 rounded-lg">
-                  <p className="text-gray-600 text-lg">
-                    Preview not supported for this file type.
-                  </p>
-                  <Button
-                    onClick={() => handleDownload(documents.find((doc) => doc.fileName === previewDoc.filename))}
-                    className="mt-4 bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <FaDownload className="mr-2" />
-                    Download to View
-                  </Button>
-                </div>
-              )}
+                  <div className="text-center p-6 bg-gray-100 rounded-lg">
+                    <p className="text-gray-600 text-lg">Preview not supported for this file type.</p>
+                    <Button
+                      onClick={handleDownload}
+                      className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <FaDownload className="mr-2" />
+                      Download to View
+                    </Button>
+                  </div>
+                )}
             </div>
           </div>
         </div>
@@ -282,3 +277,4 @@ export default function DocumentCardList({ documents = [], loading = false }) {
     </>
   );
 }
+

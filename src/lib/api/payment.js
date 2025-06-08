@@ -52,8 +52,7 @@ export async function checkSubscriptionStatus(token) {
     }
 
     const result = await response.json();
-    console.log('API Response:', result); // Debug log
-
+    
     // Validate response structure
     if (typeof result === 'boolean') {
       return result;

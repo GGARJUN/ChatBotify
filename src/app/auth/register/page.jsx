@@ -18,7 +18,6 @@ export default function RegisterPage() {
     try {
       setFormError(null);
       await register(formData);
-      toast.success('Registration successful! Please check your email for verification.');
     } catch (error) {
       toast.error(errorMessage);
       console.error('Registration error:', error);

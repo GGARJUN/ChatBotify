@@ -1,10 +1,15 @@
+import ProfilePage from '@/components/ProfileComponents/ProfilePage'
+import ResetPassword from '@/components/ProfileComponents/ResetPassword'
+import Subscription from '@/components/ProfileComponents/Subscription'
 import React from 'react'
 
 function Profile() {
     return (
-        <div>
-            <div className='flex items-center justify-center h-full text-2xl font-bold'>Profile</div>
-        </div>
+        <>
+            <ProfilePage />
+            <ResetPassword />
+            <Subscription />
+        </>
     )
 }
 

@@ -1,0 +1,45 @@
+        {/* Client ID - readonly */}
+        {/* <div>
+          <Label htmlFor="clientId" className="text-sm font-medium text-[#1b0b3b]">
+            Client ID
+          </Label>
+          <Input
+            type="text"
+            name="clientId"
+            id="clientId"
+            value={formData.clientId}
+            readOnly
+            className="mt-1 border-[#eae6e7] bg-gray-50 cursor-not-allowed"
+          />
+        </div> */}
+        {/* Status */}
+        {/* <div>
+          <Label htmlFor="status" className="text-sm font-medium text-[#1b0b3b]">
+            Status
+          </Label>
+          <Select value={formData.status} onValueChange={handleSelectChange}>
+            <SelectTrigger className="mt-1 border-[#eae6e7] hover:border-[#7856ff] transition-all duration-300 rounded-[10px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+              <SelectItem value="INACTIVE">INACTIVE</SelectItem>
+              <SelectItem value="DRAFT">DRAFT</SelectItem>
+            </SelectContent>
+          </Select>
+        </div> */}
+
+
+
+        doc
+
+              {/* <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="clientId" className="text-right">Client ID</Label>
+        <Input
+          id="clientId"
+          value={clientId || ''}
+          readOnly
+          disabled
+          className="col-span-3 bg-gray-100 cursor-not-allowed"
+        />
+      </div> */}

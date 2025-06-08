@@ -26,7 +26,6 @@ export default function Documents() {
         router.push('/auth/login');
         return;
       }
-
       const data = await getDocuments(token);
       setDocuments(data || []);
     } catch (error) {
@@ -118,7 +117,7 @@ export default function Documents() {
                 Your Documents ({documents.length})
               </h2>
             </div>
-            <DocumentCardList documents={documents} />
+            <DocumentCardList documents={documents} loading={loading} />
           </>
         )}
       </div>

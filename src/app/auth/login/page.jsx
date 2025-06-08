@@ -13,15 +13,15 @@ import Link from 'next/link';
 import { AuthForm } from '@/components/authComponents/AuthForm';
 
 export default function LoginPage() {
-  const router = useRouter();
+
   const { user, login, loading } = useAuth();
   const [formError, setFormError] = useState(null);
 
-  useEffect(() => {
-    if (user) {
-      router.push('/dashboard');
-    }
-  }, [user, router]);
+  // useEffect(() => {
+  //   if (user) {
+  //     router.push('/dashboard');
+  //   }
+  // }, [user, router]);
 
   const handleLogin = async (credentials) => {
     try {
