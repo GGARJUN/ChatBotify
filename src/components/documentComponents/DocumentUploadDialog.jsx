@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -52,13 +51,17 @@ export default function DocumentUploadDialog({ onSuccess }) {
 
       // Update with real document
       onSuccess({
-        ...optimisticDoc,
-        id: recordResponse.id,
+        id: optimisticDoc.id, // Keep the same ID to allow replacement
+        fileName: formData.file.name,
+        fileType: formData.file.type,
+        fileSizeBytes: formData.file.size,
+        description: formData.description,
+        clientId: user.clientId,
         s3Url: uploadResult.s3Url,
-        isUploading: false
+        isUploading: false,
+        recordId: recordResponse.id // Include the real ID from the server
       });
 
-      toast.success('Document uploaded successfully');
       setOpen(false);
     } catch (error) {
       toast.error(error.message || 'Upload failed');

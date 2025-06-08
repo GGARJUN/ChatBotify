@@ -162,16 +162,37 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
           className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
           placeholder="••••••••"
         />
-        <PasswordStrengthBar
-          password={formValues.password}
-          onChangeScore={(score) => setPasswordScore(score)}
-          className="mt-2"
-        />
         {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-        <p className="mt-1 text-xs text-gray-500">
-          Password must contain at least 8 characters, including uppercase, lowercase, number and special character.
-        </p>
       </div>
+
+
+
+      {type === 'register' && (
+        <div className="text-left">
+          <label htmlFor="password" className="block text-sm font-medium mb-1">
+            Password *
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            value={formValues.password}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
+            placeholder="••••••••"
+          />
+          <PasswordStrengthBar
+            password={formValues.password}
+            onChangeScore={(score) => setPasswordScore(score)}
+            className="mt-2"
+          />
+          {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+          <p className="mt-1 text-xs text-gray-500">
+            Password must contain at least 8 characters, including uppercase, lowercase, number and special character.
+          </p>
+        </div>
+      )}
 
       {type === 'register' && (
         <div className="text-left">
@@ -196,8 +217,8 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
         type="submit"
         disabled={loading || (type === 'register' && passwordScore < 3)}
         className={`mt-4 w-full py-3 px-4 rounded-lg font-medium text-white cursor-pointer ${loading || (type === 'register' && passwordScore < 3)
-            ? 'bg-blue-600 cursor-not-allowed'
-            : 'bg-blue-600 hover:bg-blue-700'
+          ? 'bg-blue-600 cursor-not-allowed'
+          : 'bg-blue-600 hover:bg-blue-700'
           } transition-colors flex items-center justify-center gap-2`}
       >
         {loading ? (

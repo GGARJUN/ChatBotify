@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
@@ -27,7 +29,12 @@ export default function Documents() {
         return;
       }
       const data = await getDocuments(token);
-      setDocuments(data || []);
+      const sortedBots = data.sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA;
+      });
+      setDocuments(sortedBots || []);
     } catch (error) {
       console.error('Failed to fetch documents:', error);
       setError('Failed to load documents. Please try again.');
@@ -44,8 +51,23 @@ export default function Documents() {
   }, [authLoading, user]);
 
   const handleUploadSuccess = (newDocument) => {
-    setDocuments((prev) => [newDocument, ...prev]);
-    toast.success('Document uploaded successfully!');
+    setDocuments((prev) => {
+      // Check if this is an update to an optimistic document (temp ID)
+      const isOptimisticUpdate = prev.some(doc => doc.id === newDocument.id && doc.id.startsWith('temp-'));
+      if (isOptimisticUpdate) {
+        // Replace the optimistic document with the final one
+        return prev.map(doc =>
+          doc.id === newDocument.id ? { ...doc, ...newDocument } : doc
+        );
+      }
+      // Otherwise, add the new document to the top of the list
+      return [newDocument, ...prev];
+    });
+
+    // Show success toast only when the upload is fully complete (not for optimistic update)
+    if (!newDocument.isUploading) {
+      toast.success('Document uploaded successfully!');
+    }
   };
 
   const handleRetry = () => {
@@ -98,7 +120,6 @@ export default function Documents() {
             </div>
           </div>
         ) : documents.length === 0 ? (
-
           <div className="flex flex-col items-center justify-center py-12">
             <div className="text-center max-w-md">
               <div className="mx-auto h-20 w-20 bg-gray-200 rounded-full flex items-center justify-center">
@@ -106,7 +127,7 @@ export default function Documents() {
               </div>
               <h3 className="mt-2 text-lg font-medium text-gray-900">No Documents Found!</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Get started by Upload your first document.
+                Get started by uploading your first document.
               </p>
             </div>
           </div>
