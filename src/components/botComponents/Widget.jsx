@@ -41,15 +41,15 @@ export default function Widget({ onClose, botId, botName }) {
     abortControllerRef.current = new AbortController();
 
     try {
-      const idToken = localStorage.getItem("idToken");
-      if (!idToken) throw new Error("No authentication token found.");
+      // const idToken = localStorage.getItem("idToken");
+      // if (!idToken) throw new Error("No authentication token found.");
 
       const payload = {
         query_text: input,
         project_id: botId,
       };
 
-      const data = await sendChatMessage(payload, idToken, abortControllerRef.current.signal);
+      const data = await sendChatMessage(payload, abortControllerRef.current.signal);
 
       const botMessage = {
         id: Date.now().toString(),
@@ -96,7 +96,7 @@ export default function Widget({ onClose, botId, botName }) {
   return (
     <div
       className={cn(
-        "flex flex-col h-[450px] w-[400px] fixed bottom-5 bg-white right-5 rounded-lg border border-gray-200 shadow-lg"
+        "flex flex-col h-[450px] w-[400px] fixed bottom-5 right-5 rounded-lg border border-gray-200 shadow-lg"
       )}
     >
       {/* Header */}

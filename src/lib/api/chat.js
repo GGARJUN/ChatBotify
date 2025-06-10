@@ -1,12 +1,13 @@
 // lib/api/chat.ts
+const QUERY_URL = process.env.NEXT_PUBLIC_QUERY_URL;
 
   export async function sendChatMessage(
     payload,
     token,
     signal
   ){
-    const response = await fetch(
-      'https://u9pvrypbbl.execute-api.us-east-1.amazonaws.com/prod/rccs/rcpu/query', 
+    const response = await fetch(`${QUERY_URL}/rccs/rcpu/query`,
+      // 'https://u9pvrypbbl.execute-api.us-east-1.amazonaws.com/prod/rccs/rcpu/query', 
       {
         method: 'POST',
         headers: {

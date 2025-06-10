@@ -208,7 +208,7 @@ function ProfilePage() {
                                 className="mt-2"
                             />
                         </div>
-                        <div>
+                        {/* <div>
                             <Label htmlFor="email">Email</Label>
                             <Input
                                 id="email"
@@ -229,7 +229,7 @@ function ProfilePage() {
                                 disabled
                                 className="mt-2 bg-gray-100"
                             />
-                        </div>
+                        </div> */}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsEditing(false)}>

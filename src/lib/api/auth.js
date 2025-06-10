@@ -1,25 +1,44 @@
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const API_BASE_URL =  'https://p12k32pylk.execute-api.us-east-1.amazonaws.com/dev';
+// Helper function to validate email format
+const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
 
+// Helper function to handle API responses
 const handleResponse = async (response) => {
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const errorMessage = errorData.message || 
-      (response.status === 401 ? 'Invalid credentials' : 
-       response.status === 403 ? 'Access denied' : 
-       response.status === 429 ? 'Too many requests' : 
-       'Request failed');
+    const errorText = await response.text();
     
-    const error = new Error(errorMessage);
-    error.code = response.status;
-    error.details = errorData;
-    throw error;
+    // Check for specific error messages
+    if (errorText.includes('[NOT_VERIFIED]')) {
+      throw new Error('User email not verified. Please check your inbox for the verification email.');
+    }
+    if (errorText.includes('Unauthorized')) {
+      throw new Error('NotAuthorizedException');
+    }
+    
+    throw new Error(errorText || 'Request failed');
   }
+  
   return await response.json();
 };
 
+// Sign-in function
 export const signIn = async (credentials) => {
   try {
+    // Input validation
+    if (!credentials?.email || !credentials?.password) {
+      throw new Error('Email and password are required');
+    }
+    if (!isValidEmail(credentials.email)) {
+      throw new Error('Invalid email format');
+    }
+    if (credentials.password.length < 6) {
+      throw new Error('Password must be at least 6 characters');
+    }
+
     const response = await fetch(`${API_BASE_URL}/auth/signIn`, {
       method: 'POST',
       headers: {
@@ -27,22 +46,31 @@ export const signIn = async (credentials) => {
       },
       body: JSON.stringify({
         emailId: credentials.email,
-        password: credentials.password
+        password: credentials.password,
       }),
     });
-    const data = await handleResponse(response);
 
-    return data;
+    return await handleResponse(response);
   } catch (error) {
-    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      throw new Error('Network error. Please check your connection.');
-    }
+    console.error('SignIn error:', error.message);
     throw error;
   }
 };
 
+// Sign-up function
 export const signUp = async (userData) => {
   try {
+    // Input validation
+    if (!userData?.email || !userData?.firstName || !userData?.lastName || !userData?.password) {
+      throw new Error('Email, first name, last name, and password are required');
+    }
+    if (!isValidEmail(userData.email)) {
+      throw new Error('Invalid email format');
+    }
+    if (userData.password.length < 6) {
+      throw new Error('Password must be at least 6 characters');
+    }
+
     const response = await fetch(`${API_BASE_URL}/auth/signUp`, {
       method: 'POST',
       headers: {
@@ -53,11 +81,13 @@ export const signUp = async (userData) => {
         firstName: userData.firstName,
         lastName: userData.lastName,
         password: userData.password,
-        organization: userData.organization || 'personal'
+        organization: userData.organization || 'personal',
       }),
     });
+
     return await handleResponse(response);
   } catch (error) {
+    console.error('SignUp error:', error.message);
     if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
       throw new Error('Network error. Please check your connection.');
     }

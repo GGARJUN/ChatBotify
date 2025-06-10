@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FaPlus } from 'react-icons/fa6';
-import { createBot, getBots } from '@/lib/api/bots';
+import { createMyBot, getBots } from '@/lib/api/bots';
 import { checkSubscriptionStatus } from '@/lib/api/payment';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -98,7 +98,7 @@ function CreateBot({ onCreate }) {
       };
 
       const token = localStorage.getItem('idToken');
-      await createBot(botData, token);
+      await createMyBot(botData, token);
 
       toast.success('Bot created successfully!');
       onCreate(); // Notify parent that a bot was created

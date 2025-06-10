@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-const API_URL = 'https://p12k32pylk.execute-api.us-east-1.amazonaws.com/dev/rc/users'; 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const getUserProfile = async (userId, token) => {
   try {
-    const response = await axios.get(`${API_URL}/${userId}`, {
+    const response = await axios.get(`${API_BASE_URL}/rc/users/${userId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
@@ -16,7 +16,7 @@ export const getUserProfile = async (userId, token) => {
 
 export const updateUserProfile = async (userId, updatedData, token) => {
   try {
-    const response = await axios.patch(`${API_URL}/${userId}`, updatedData, {
+    const response = await axios.patch(`${API_BASE_URL}/rc/users/${userId}`, updatedData, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;

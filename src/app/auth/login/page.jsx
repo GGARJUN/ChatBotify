@@ -14,22 +14,17 @@ import { AuthForm } from '@/components/authComponents/AuthForm';
 
 export default function LoginPage() {
 
-  const { user, login, loading } = useAuth();
+  const { login, loading } = useAuth();
   const [formError, setFormError] = useState(null);
-
-  // useEffect(() => {
-  //   if (user) {
-  //     router.push('/dashboard');
-  //   }
-  // }, [user, router]);
 
   const handleLogin = async (credentials) => {
     try {
       setFormError(null);
-      await login(credentials);
+     const response = await login(credentials);
+     console.log('response',response);
+     
       toast.success('Login successful...');
     } catch (error) {
-      console.error('Login error:', error);
       setFormError(error.message || 'Login failed. Please try again.');
     }
   };

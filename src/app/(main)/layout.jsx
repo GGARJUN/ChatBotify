@@ -55,12 +55,12 @@ function DashboardLayout({ children }) {
         </div> */}
 
         {/* Desktop Sidebar */}
-        <div className="hidden md:block md:w-72 fixed h-screen">
+        <div className="hidden md:block md:w-72 fixed h-screen bg-blue-100/40">
           <SideNavBar />
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 md:ml-72  px-3 py-3 ">
+        <div className="flex-1 md:ml-72  px-3 py-3 bg-blue-100/40 min-h-screen">
           <div className="px-6 py-3">
             {children}
           </div>

@@ -266,6 +266,14 @@ export default function BotsPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h2 className="font-semibold text-sm md:text-base text-slate-900 truncate">{bot.name}</h2>
+                        <h2 className="font-medium text-xs text-slate-500 line-clamp-1">{bot.description}</h2>
+                        {/* <p className="text-slate-400 text-xs md:text-sm">
+                          {new Date(bot.updatedAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </p> */}
                         <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                           <FaLink className="w-3 h-3" />
                           {docs.length > 0 ? (
@@ -276,6 +284,19 @@ export default function BotsPage() {
                             "No Documents Linked"
                           )}
                         </p>
+
+                      </div>
+                      <div>
+                        <span
+                          className={`px-2 py-1 rounded-md text-xs font-medium whitespace-nowrap ${bot.status === 'ACTIVE'
+                            ? 'bg-green-100 text-green-700'
+                            : bot.status === 'DRAFT'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-red-100 text-red-700'
+                            }`}
+                        >
+                          {bot.status}
+                        </span>
                       </div>
                     </div>
 

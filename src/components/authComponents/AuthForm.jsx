@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -14,19 +13,13 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
       firstName: '',
       lastName: '',
       organization: '',
-    })
+      confirmPassword: '', // Added confirmPassword for registration
+    }),
   });
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [passwordScore, setPasswordScore] = useState(0);
-
-  useEffect(() => {
-    // Reset errors when form values change
-    if (Object.keys(errors).length > 0) {
-      setErrors({});
-    }
-  }, [formValues]);
 
   const validateField = (name, value) => {
     switch (name) {
@@ -37,12 +30,12 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
       case 'password':
         if (!value) return 'Password is required';
         if (value.length < 8) return 'Password must be at least 8 characters';
-        if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(value))
-          return 'Password must contain uppercase, lowercase, number and special character';
+        if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(value))
+          return 'Password must contain uppercase, lowercase, number, and special character';
         return '';
-      // case 'confirmPassword':
-      //   if (value !== formValues.password) return 'Passwords do not match';
-      //   return '';
+      case 'confirmPassword':
+        if (type === 'register' && value !== formValues.password) return 'Passwords do not match';
+        return '';
       case 'firstName':
       case 'lastName':
         if (!value) return 'This field is required';
@@ -58,18 +51,26 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormValues(prev => ({ ...prev, [name]: value }));
+    setFormValues((prev) => ({ ...prev, [name]: value }));
 
     // Validate on change if field has been touched
     if (touched[name]) {
-      setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+      setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+    }
+
+    // Re-validate confirmPassword if password changes
+    if (name === 'password' && type === 'register' && touched.confirmPassword) {
+      setErrors((prev) => ({
+        ...prev,
+        confirmPassword: validateField('confirmPassword', formValues.confirmPassword),
+      }));
     }
   };
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-    setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
   const handleSubmit = (e) => {
@@ -77,15 +78,23 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
 
     // Validate all fields
     const newErrors = {};
-    Object.keys(formValues).forEach(key => {
+    Object.keys(formValues).forEach((key) => {
       newErrors[key] = validateField(key, formValues[key]);
     });
 
     setErrors(newErrors);
     setTouched(Object.keys(formValues).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
 
-    // Check if any errors exist
-    if (Object.values(newErrors).some(error => error)) {
+    // Check if any errors exist or if password score is too low for registration
+    if (Object.values(newErrors).some((error) => error)) {
+      return;
+    }
+
+    if (type === 'register' && passwordScore < 2) {
+      setErrors((prev) => ({
+        ...prev,
+        password: 'Password is too weak. Please choose a stronger password.',
+      }));
       return;
     }
 
@@ -107,7 +116,9 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
               value={formValues.firstName}
               onChange={handleChange}
               onBlur={handleBlur}
-              className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${errors.firstName ? 'border-red-500' : 'border-gray-300'}`}
+              className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${
+                errors.firstName ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="John"
             />
             {errors.firstName && <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>}
@@ -123,7 +134,9 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
               value={formValues.lastName}
               onChange={handleChange}
               onBlur={handleBlur}
-              className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${errors.lastName ? 'border-red-500' : 'border-gray-300'}`}
+              className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${
+                errors.lastName ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="Doe"
             />
             {errors.lastName && <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>}
@@ -142,7 +155,9 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
           value={formValues.email}
           onChange={handleChange}
           onBlur={handleBlur}
-          className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+          className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${
+            errors.email ? 'border-red-500' : 'border-gray-300'
+          }`}
           placeholder="your@email.com"
         />
         {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
@@ -159,38 +174,46 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
           value={formValues.password}
           onChange={handleChange}
           onBlur={handleBlur}
-          className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
+          className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${
+            errors.password ? 'border-red-500' : 'border-gray-300'
+          }`}
           placeholder="••••••••"
         />
+        {type === 'register' && (
+          <>
+            <PasswordStrengthBar
+              password={formValues.password}
+              onChangeScore={(score) => setPasswordScore(score)}
+              className="mt-2"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Password must contain at least 8 characters, including uppercase, lowercase, number, and special character.
+            </p>
+          </>
+        )}
         {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
       </div>
 
-
-
       {type === 'register' && (
         <div className="text-left">
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
-            Password *
+          <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
+            Confirm Password *
           </label>
           <input
-            id="password"
-            name="password"
+            id="confirmPassword"
+            name="confirmPassword"
             type="password"
-            value={formValues.password}
+            value={formValues.confirmPassword}
             onChange={handleChange}
             onBlur={handleBlur}
-            className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
+            className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${
+              errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+            }`}
             placeholder="••••••••"
           />
-          <PasswordStrengthBar
-            password={formValues.password}
-            onChangeScore={(score) => setPasswordScore(score)}
-            className="mt-2"
-          />
-          {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-          <p className="mt-1 text-xs text-gray-500">
-            Password must contain at least 8 characters, including uppercase, lowercase, number and special character.
-          </p>
+          {errors.confirmPassword && (
+            <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+          )}
         </div>
       )}
 
@@ -206,7 +229,9 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
             value={formValues.organization}
             onChange={handleChange}
             onBlur={handleBlur}
-            className={`w-full border rounded-lg p-3 ${errors.organization ? 'border-red-500' : 'border-gray-300'}`}
+            className={`w-full border rounded-lg p-3 hover:border-primary transition-all duration-300 ${
+              errors.organization ? 'border-red-500' : 'border-gray-300'
+            }`}
             placeholder="Your Company"
           />
           {errors.organization && <p className="mt-1 text-sm text-red-600">{errors.organization}</p>}
@@ -215,30 +240,18 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
 
       <button
         type="submit"
-        disabled={loading || (type === 'register' && passwordScore < 3)}
-        className={`mt-4 w-full py-3 px-4 rounded-lg font-medium text-white cursor-pointer ${loading || (type === 'register' && passwordScore < 3)
-          ? 'bg-blue-600 cursor-not-allowed'
-          : 'bg-blue-600 hover:bg-blue-700'
-          } transition-colors flex items-center justify-center gap-2`}
+        disabled={loading || (type === 'register' && passwordScore < 2)}
+        className={` cursor-pointer mt-4 w-full py-3 px-4 rounded-lg font-medium text-white transition-colors flex items-center justify-center gap-2 ${
+          loading || (type === 'register' && passwordScore < 2)
+            ? 'bg-blue-400 cursor-not-allowed'
+            : 'bg-blue-600 hover:bg-blue-700'
+        }`}
       >
         {loading ? (
-          type === 'login' ? (
-            <>
-              <span>Logging in</span>
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            </>
-          ) : (
-            <>
-              <span>Registering</span>
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            </>
-          )
+          <>
+            <span>{type === 'login' ? 'Logging in' : 'Registering'}</span>
+            <Loader2 className="animate-spin h-5 w-5 text-white" />
+          </>
         ) : type === 'login' ? (
           'Log In'
         ) : (
@@ -246,7 +259,13 @@ export const AuthForm = ({ type, onSubmit, loading }) => {
         )}
       </button>
 
-      <div className="text-center text-sm ">
+      {type === 'register' && passwordScore < 2 && formValues.password && (
+        <p className="text-center text-sm text-red-600">
+          Password is too weak. Please choose a stronger password to proceed.
+        </p>
+      )}
+
+      <div className="text-center text-sm">
         {type === 'login' ? (
           <>
             Don't have an account?{' '}

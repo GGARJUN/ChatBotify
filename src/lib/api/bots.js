@@ -2,9 +2,9 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 
-const API_BASE_URL = 'https://p12k32pylk.execute-api.us-east-1.amazonaws.com/dev';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export const createBot = async (botData, token) => {
+export const createMyBot = async (botData, token) => {
   try {
     // Validate required fields
     if (!botData.clientId || !botData.name || !botData.status) {

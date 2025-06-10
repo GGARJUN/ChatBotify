@@ -61,19 +61,17 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setAuthError(null);
-
+  
       // Basic client-side validation
       if (!credentials.email || !credentials.password) {
         throw new Error('Email and password are required');
       }
-
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentials.email)) {
         throw new Error('Please enter a valid email address');
       }
-
+  
       const response = await signIn(credentials);
       const { idToken, accessToken, refreshToken } = response;
-
       const decodedUser = jwtDecode(idToken);
       const userData = {
         userId: decodedUser["custom:userId"] || decodedUser.sub,
@@ -82,20 +80,18 @@ export const AuthProvider = ({ children }) => {
         clientId: decodedUser["custom:clientId"] || null,
         // isVerified: decodedUser.isVerified === 'true'
       };
-
+  
       // Store tokens and user data
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('idToken', idToken);
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-
       setUser(userData);
-
       router.push('/dashboard');
     } catch (error) {
       console.error("Login error:", error);
+  
       let errorMessage = 'Login failed. Please try again.';
-
       if (error.message.includes('NotAuthorizedException')) {
         errorMessage = 'Invalid credentials';
       } else if (error.message.includes('UserNotFoundException')) {
@@ -106,8 +102,11 @@ export const AuthProvider = ({ children }) => {
         errorMessage = 'Account temporarily locked due to too many failed attempts';
       } else if (error.message.includes('Network error')) {
         errorMessage = 'Network error. Please check your connection.';
+      } else if (error.message.includes('NOT_VERIFIED')) {
+        // Handle NOT_VERIFIED case explicitly
+        errorMessage = 'Your email is not verified. Please check your inbox for the verification email.';
       }
-
+  
       setAuthError(errorMessage);
       toast.error(errorMessage);
       throw error;
@@ -116,6 +115,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  
   // Enhanced registration with comprehensive validation
   const register = async (userData) => {
     try {
