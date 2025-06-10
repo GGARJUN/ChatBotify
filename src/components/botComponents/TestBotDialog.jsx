@@ -14,7 +14,7 @@ export default function TestBotDialog({
   botName,
   onCopy,
 }) {
-  const scriptTag = `<script src="http://localhost:3000/inject.js" data-project-id="${botId}"></script>`;
+  const scriptTag = `<script src="https://dev.sonicpad.ai/inject.js" data-project-id="${botId}"></script>`;
   const inputRef = useRef(null);
 
   const handleCopy = async () => {
